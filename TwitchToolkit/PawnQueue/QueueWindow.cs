@@ -1,5 +1,6 @@
 ﻿using RimWorld;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Verse;
 
@@ -35,7 +36,7 @@ namespace TwitchToolkit.PawnQueue
             rightSide.width = 120;
             rightSide.y += 26;
             rightSide.x += 150;
-            if (Widgets.ButtonText(rightSide, "Assign"))
+            if (Widgets.ButtonText(rightSide, "Assign", active: !string.IsNullOrWhiteSpace(selectedUsername)))
             {
                 NameColonist(selectedUsername, selectedPawn);
             }         
@@ -63,8 +64,8 @@ namespace TwitchToolkit.PawnQueue
                 namedStatus,
                 "Colonist " + (
                         viewerNamed ? 
-                        "Named after <color=#4BB543>" + pawnComponent.UserAssignedToPawn(selectedPawn) + "</color>" : 
-                        "<color=#B2180E>Unnamed</color>"
+                        "named after <color=#4BB543>" + pawnComponent.UserAssignedToPawn(selectedPawn) + "</color>" : 
+                        "<color=#B2180E>unnamed</color>"
                     )
                 );
 
@@ -121,7 +122,6 @@ namespace TwitchToolkit.PawnQueue
                     }
                     break;
                 case PawnQueueSelector.FirstDefault:
-                    Helper.Log("first or default");
                     allColonists = Find.ColonistBar.GetColonistsInOrder();
                     unnamedColonists = GetUnamedColonists();
                     selectedUsername = "";
@@ -176,29 +176,46 @@ namespace TwitchToolkit.PawnQueue
 
         public void NameColonist(string username, Pawn pawn)
         {
+            if (pawnComponent.HasUserBeenNamed(username))
+            {
+                var pawnRemoved = pawnComponent.pawnHistory[username];
+                Name newName;
+                if(pawnRemoved.Name is NameTriple nameTri)
+                {
+                    // Default the name back to the colonist's first name.
+                    // We can't know if the colonist had a nickname originally, but this is good enough.
+                    newName = new NameTriple(nameTri.First, nameTri.First, nameTri.Last);
+                }
+                else if (pawnRemoved.Name is NameSingle nameSin)
+                {
+                    // Shouldn't really ever come up, but not having an option seems like a bad idea.
+                    // If the pawn is already registered, it should have been created with a NameTriple.
+                    newName = new NameSingle(nameSin.NameWithoutNumber + (nameSin.Number + 1), true);
+                }
+                else
+                {
+                    // Dibs (this literally can only happen if someone adds a new Name type)
+                    newName = new NameSingle("Delmain");
+                }
+
+                pawnRemoved.Name = newName;
+                pawnComponent.pawnHistory.Remove(username);
+            }
+
             if (pawnComponent.HasPawnBeenNamed(pawn))
             {
                 if (pawnComponent.pawnHistory.ContainsValue(pawn))
                 {
-                    string key = null;
-                    foreach (KeyValuePair<string, Pawn> pair in pawnComponent.pawnHistory)
-                    {
-                        if (pair.Value == pawn)
-                        {
-                            key = pair.Key;
-                            continue;
-                        }
-                    }
-
-                    if (key != null)
-                    {
-                        pawnComponent.pawnHistory.Remove(key);
-                    }
+                    var usernameRemoved = pawnComponent.pawnHistory.FirstOrDefault(kvp => kvp.Value == pawn).Key;
+                    if (usernameRemoved != null)
+                        pawnComponent.pawnHistory.Remove(usernameRemoved);
                 }
             }
 
-            NameTriple currentName = pawn.Name as NameTriple;
-            pawn.Name = new NameTriple(currentName.First, username, currentName.Last);
+            if(pawn.Name is NameTriple currentName)
+                pawn.Name = new NameTriple(currentName.First, username, currentName.Last);
+            else
+                pawn.Name = new NameSingle(username);
             pawnComponent.AssignUserToPawn(selectedUsername.ToLower(), selectedPawn);
             GetPawn(PawnQueueSelector.FirstDefault);
         }
