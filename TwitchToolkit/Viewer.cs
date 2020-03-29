@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using TwitchToolkit.Store;
 
 namespace TwitchToolkit
@@ -121,7 +120,7 @@ namespace TwitchToolkit
 
         public void TakeViewerCoins(int coins)
         {
-            SetViewerCoins(this.coins - coins);
+            GiveViewerCoins(0 - coins);
         }
 
         public bool IsBanned

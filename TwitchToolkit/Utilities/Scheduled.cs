@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace TwitchToolkit.Utilities
-{   
+{
     public class Scheduled
     {
         private List<ScheduledJob> jobs;

@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using TwitchToolkit.Store;
 using Verse;
 
 namespace TwitchToolkit.Store

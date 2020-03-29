@@ -1,12 +1,7 @@
 ﻿using ToolkitCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using TwitchLib.Client.Models;
 using TwitchToolkit.PawnQueue;
-using TwitchToolkit.Store;
-using UnityEngine;
+using TwitchToolkit.Utilities;
 using Verse;
 
 namespace TwitchToolkit.Twitch
@@ -27,7 +22,11 @@ namespace TwitchToolkit.Twitch
 
             if (component.HasUserBeenNamed(msg.Username))
             {
-                component.PawnAssignedToUser(msg.Username).story.hairColor = msg.Color;
+                if (!string.IsNullOrWhiteSpace(msg.ColorHex))
+                    component.PawnAssignedToUser(msg.Username).story.hairColor = msg.ColorHex.ToUnityColor();
+                else
+                    component.PawnAssignedToUser(msg.Username).story.hairColor = 
+                        new UnityEngine.Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
             }
 
             if (msg.IsModerator && !viewer.mod)
@@ -38,11 +37,6 @@ namespace TwitchToolkit.Twitch
             if (msg.IsSubscriber && !viewer.IsSub)
             {
                 viewer.subscriber = true;
-            }
-
-            if (msg.IsVip && !viewer.IsVIP)
-            {
-                viewer.vip = true;
             }
         }
     }

@@ -1,10 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.Settings;
-using TwitchToolkit.Store;
 using TwitchToolkit.Votes;
 using UnityEngine;
 using Verse;
@@ -234,7 +231,7 @@ namespace TwitchToolkit
             options.Gap();
 
             if (options.ButtonText("Wiki"))
-                Application.OpenURL("https://github.com/hodldeeznuts/twitchtoolkit/wiki");
+                Application.OpenURL("https://storytoolkit.fandom.com/wiki/StoryToolkit_Wiki");
 
             // Middle column
             options.NewColumn();

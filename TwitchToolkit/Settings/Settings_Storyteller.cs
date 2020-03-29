@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using TwitchToolkit.Storytellers;
 using TwitchToolkit.Storytellers.StorytellerPackWindows;
 using TwitchToolkit.Votes;
 using UnityEngine;

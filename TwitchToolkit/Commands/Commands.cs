@@ -1,12 +1,7 @@
-﻿using RimWorld;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TwitchLib.Client.Models;
-using TwitchToolkit.Incidents;
-using TwitchToolkit.PawnQueue;
-using TwitchToolkit.Store;
 using Verse;
 
 namespace TwitchToolkit

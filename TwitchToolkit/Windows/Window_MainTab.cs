@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using RimWorld;
 using UnityEngine;
 using Verse;
-using TwitchToolkit.Utilities;
 using TwitchToolkit.PawnQueue;
 using TwitchToolkit.Windows;
 using TwitchToolkit.Store;

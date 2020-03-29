@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using TwitchToolkit.Incidents;
-using TwitchToolkit.Settings;
 using TwitchToolkit.Store;
 using UnityEngine;
 using Verse;

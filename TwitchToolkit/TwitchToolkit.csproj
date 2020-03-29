@@ -12,6 +12,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <CurrentRimWorldLoadFolder>v1.1</CurrentRimWorldLoadFolder>
+    <TargetFrameworkProfile />
     <!-- This must match the folder specified in LoadFolders.xml -->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -22,6 +23,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -30,6 +32,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Krafs.Rimworld.Ref" Version="1.1.2575" />
@@ -130,6 +133,7 @@
     <Compile Include="Storytellers\Window_UristBotSettings.cs" />
     <Compile Include="Twitch\MessageInterface.cs" />
     <Compile Include="Utilities\CustomMatLoader.cs" />
+    <Compile Include="Utilities\Extensions.cs" />
     <Compile Include="Utilities\WeatherOverlay_VomitRain.cs" />
     <Compile Include="Votes\Vote_ExoticItems.cs" />
     <Compile Include="Votes\Vote_HodlBot.cs" />
@@ -216,11 +220,11 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ToolkitCore">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\ToolkitCore\Assemblies\ToolkitCore.dll</HintPath>
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\ToolkitCore\Assemblies\ToolkitCore.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="TwitchLib.Client.Models">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld\Mods\ToolkitCore\Assemblies\TwitchLib.Client.Models.dll</HintPath>
+      <HintPath>..\..\TwitchLib\TwitchLib.Client\TwitchLib.Client\bin\Debug\netstandard2.0\TwitchLib.Client.Models.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

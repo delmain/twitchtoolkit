@@ -1,11 +1,7 @@
 ﻿using RimWorld;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.Votes;
-using UnityEngine;
 using Verse;
 
 namespace TwitchToolkit.VotingHelpers.VotingHelpers_Animals

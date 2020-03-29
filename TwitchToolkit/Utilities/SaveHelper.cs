@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using SimpleJSON;
-using TwitchToolkit.Store;
 using UnityEngine;
-using Verse;
 
 namespace TwitchToolkit.Utilities
 {

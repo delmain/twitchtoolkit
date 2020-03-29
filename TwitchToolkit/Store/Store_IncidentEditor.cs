@@ -7,7 +7,6 @@ using System.Text;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.Utilities;
 using Verse;
-using UnityEngine;
 
 namespace TwitchToolkit.Store
 {

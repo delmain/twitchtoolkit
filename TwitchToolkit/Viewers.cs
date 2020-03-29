@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Verse;
 using TwitchToolkit.Utilities;
 using TwitchToolkit.Store;
-using MoonSharp.Interpreter;
 
 namespace TwitchToolkit
 {

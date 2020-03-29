@@ -1,12 +1,9 @@
 ﻿using RimWorld;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using ToolkitCore;
 using TwitchToolkit.IncidentHelpers.IncidentHelper_Settings;
 using TwitchToolkit.PawnQueue;
-using TwitchToolkit.Settings;
 using TwitchToolkit.Store;
 using UnityEngine;
 using Verse;

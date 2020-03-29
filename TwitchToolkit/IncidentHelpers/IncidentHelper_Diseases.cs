@@ -1,10 +1,7 @@
 ﻿using ToolkitCore;
 using RimWorld;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using TwitchToolkit.Incidents;
 using TwitchToolkit.Store;
 using Verse;
 

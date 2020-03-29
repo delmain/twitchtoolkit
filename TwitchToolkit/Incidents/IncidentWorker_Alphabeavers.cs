@@ -1,14 +1,10 @@
 ﻿using RimWorld;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using Verse;
 
 namespace TwitchToolkit.Incidents
 {
-	public class IncidentWorker_Alphabeavers : IncidentWorker
+    public class IncidentWorker_Alphabeavers : IncidentWorker
 	{
 		// Token: 0x06000E1E RID: 3614 RVA: 0x00069BD8 File Offset: 0x00067FD8
 		protected override bool CanFireNowSub(IncidentParms parms)

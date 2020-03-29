@@ -4,11 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using RimWorld;
 using Verse;
-using TSIncidents = TwitchToolkit.Incidents;
 using System.Text;
-using TwitchToolkit.Store;
-using TwitchToolkit.Incidents;
-using Verse.AI.Group;
 
 namespace TwitchToolkit
 {
