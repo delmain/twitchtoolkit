@@ -12,11 +12,16 @@ namespace TwitchToolkit
     {
         public static bool FirstTimeInstallation = true;
 
-        #region IRCAuthentication
-        public static string Channel = "";
-        public static string Username = "";
-        public static string OAuth = "";
-        public static bool AutoConnect = true;
+        #region TwitchSettings (redirected from ToolkitCore
+
+        public static string Channel
+        {
+            get
+            {
+                return ToolkitCore.ToolkitCoreSettings.channel_username;
+            }
+        }
+
         #endregion
 
         #region TwitchChatRooms
@@ -341,11 +346,6 @@ namespace TwitchToolkit
         public override void ExposeData()
         {
             Scribe_Values.Look(ref FirstTimeInstallation, "FirstTimeInstallation", true);
-
-            Scribe_Values.Look(ref Channel, "Channel", "");
-            Scribe_Values.Look(ref Username, "Username", "");
-            Scribe_Values.Look(ref OAuth, "OAuth", "");
-            Scribe_Values.Look(ref AutoConnect, "AutoConnect", true);
 
             Scribe_Values.Look(ref UseSeparateChatRoom, "UseSeparateChatRoom", false);
             Scribe_Values.Look(ref AllowBothChatRooms, "AllowBothChatRooms", false);
