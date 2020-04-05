@@ -21,7 +21,7 @@
   <TwitchToolkitCoinAmount>How many coins given to viewers per interval?</TwitchToolkitCoinAmount>
   <TwitchToolkitMinimumPurchasePrice>Minimum amount of coins to spend when purchasing items?</TwitchToolkitMinimumPurchasePrice>
   <TwitchToolkitUnlimitedCoins>Should viewers have unlimited coins?</TwitchToolkitUnlimitedCoins>
-  <TwitchToolkitGiftingCoins>Are viewers able to gift each other coins? (exploitable through alt accounts)</TwitchToolkitGiftingCoins>
+  <TwitchToolkitGiftingCoins>Are viewers able to gift each other coins? (This is exploitable through the use of alternate accounts)</TwitchToolkitGiftingCoins>
   <TwitchToolkitSearch>Search</TwitchToolkitSearch>
   <TwitchToolkitResetToDefault>Reset to Default</TwitchToolkitResetToDefault>
   <TwitchToolkitAreYouSure>Are you sure?</TwitchToolkitAreYouSure>
