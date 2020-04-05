@@ -17,7 +17,7 @@
   <TwitchToolkitStorePurchasesMessage>Store purchases are now toggled</TwitchToolkitStorePurchasesMessage>
   <TwitchToolkitBalanceMessage>Coins: {amount} - Karma: {karma}%</TwitchToolkitBalanceMessage>
   <TwitchToolkitInstructions>Events/items can be purchased in game. Example: '{first} party' or '{second} beer 5'. Purchase list: {third}</TwitchToolkitInstructions>
-  <TwitchToolkitWhatIsKarma>Karma is the rate at which you earn coins. Buying bad events lowers karma while good events/items raise your karma. You are currently earning karma at a rate of</TwitchToolkitWhatIsKarma>
+  <TwitchToolkitWhatIsKarma>Karma is the rate at which you earn coins. Buying bad events lowers karma while good events/items raise your karma. You are currently earning coins at a rate of</TwitchToolkitWhatIsKarma>
   <TwitchToolkitPurchaseList>Purchase list:</TwitchToolkitPurchaseList>
   <TwitchToolkitGiftCoins>You have been gifted {amount} coins from @{from}</TwitchToolkitGiftCoins>
   <TwitchToolkitModInfo>TwitchToolkit is a mod written by Twitch.tv/hodlhodl that integrates storytelling decisions into chat votes, awards viewers coins for watching, and those coins can be spent on items/events in game. Use !purchaselist to get more info. Join the discord</TwitchToolkitModInfo>
