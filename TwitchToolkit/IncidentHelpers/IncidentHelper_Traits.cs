@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ToolkitCore;
+using ToolkitCore.Models;
 using TwitchToolkit.IncidentHelpers.IncidentHelper_Settings;
 using TwitchToolkit.PawnQueue;
 using TwitchToolkit.Store;
@@ -159,14 +160,14 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
     public class AddTrait : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
@@ -174,7 +175,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (!gameComponent.HasUserBeenNamed(viewer.username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you must be in the colony to use this command.");
+                message.Reply("You must be in the colony to use this command.");
                 return false;
             }
 
@@ -184,7 +185,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (pawn.story.traits.allTraits != null && pawn.story.traits.allTraits.Count >= customMaxTraits)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} your pawn already has max {customMaxTraits} traits.");
+                message.Reply($"Your pawn already has max {customMaxTraits} traits.");
                 return false;
             }
 
@@ -195,7 +196,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (search == null)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} trait {traitKind} not found.");
+                message.Reply($"Trait {traitKind} not found.");
                 return false;
             }
 
@@ -216,14 +217,14 @@ namespace TwitchToolkit.IncidentHelpers.Traits
             {
                 if (tr.def.ConflictsWith(trait) || traitDef.ConflictsWith(tr))
                 {
-                    TwitchWrapper.SendChatMessage($"@{viewer.username} {traitDef.defName} conflicts with your pawn's trait {tr.LabelCap}.");
+                    message.Reply($"{traitDef.defName} conflicts with your pawn's trait {tr.LabelCap}.");
                     return false;
                 }
             }
 
             if (pawn.story.traits.allTraits != null && pawn.story.traits.allTraits.Find(s => s.def.defName == search.def.defName) != null)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you already have this trait of this type.");
+                message.Reply("You already have this trait of this type.");
                 return false;
             }
 
@@ -251,12 +252,12 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             Viewer.TakeViewerCoins(storeIncident.cost);
             Viewer.CalculateNewKarma(storeIncident.karmaType, storeIncident.cost);
-            VariablesHelpers.SendPurchaseMessage($"@{Viewer.username} just added the trait " + trait.Label + " to " + pawn.Name + ".");
-            string text = $"{Viewer.username} has purchased " + trait.LabelCap + " for " + pawn.Name + ".";
+            VariablesHelpers.SendPurchaseMessage($"@{Viewer.username} just added the trait {trait.Label} to {pawn.Name}.");
+            string text = $"{Viewer.username} has purchased {trait.LabelCap} for {pawn.Name}.";
             Current.Game.letterStack.ReceiveLetter("Trait", text, LetterDefOf.PositiveEvent, pawn);
         }
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
 
         private bool separateChannel = false;
         private Pawn pawn = null;
@@ -267,14 +268,14 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
     public class RemoveTrait : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
@@ -282,7 +283,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (!gameComponent.HasUserBeenNamed(viewer.username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you must be in the colony to use this command.");
+                message.Reply("You must be in the colony to use this command.");
                 return false;
             }
 
@@ -290,7 +291,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (pawn.story.traits.allTraits != null && pawn.story.traits.allTraits.Count <= 0)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} your pawn doesn't have any traits.");
+                message.Reply("Your pawn doesn't have any traits.");
                 return false;
             }
 
@@ -300,7 +301,7 @@ namespace TwitchToolkit.IncidentHelpers.Traits
 
             if (search == null)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} trait {traitKind} not found.");
+                message.Reply($"Trait {traitKind} not found.");
                 return false;
             }
 
@@ -336,12 +337,12 @@ namespace TwitchToolkit.IncidentHelpers.Traits
             }
             Viewer.TakeViewerCoins(storeIncident.cost);
             Viewer.CalculateNewKarma(storeIncident.karmaType, storeIncident.cost);
-            VariablesHelpers.SendPurchaseMessage($"@{Viewer.username} just removed the trait " + buyableTrait.label.CapitalizeFirst() + " from " + pawn.Name + ".");
-            string text = $"{Viewer.username} has purchased trait removal of " + buyableTrait.label.CapitalizeFirst() + " from " + pawn.Name + ".";
+            VariablesHelpers.SendPurchaseMessage($"@{Viewer.username} just removed the trait {buyableTrait.label.CapitalizeFirst()} from {pawn.Name}.");
+            string text = $"{Viewer.username} has purchased trait removal of {buyableTrait.label.CapitalizeFirst()} from {pawn.Name}.";
             Current.Game.letterStack.ReceiveLetter("Trait", text, LetterDefOf.PositiveEvent, pawn);
         }
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
 
         private bool separateChannel = false;
         private Pawn pawn = null;

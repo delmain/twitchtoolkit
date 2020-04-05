@@ -2,7 +2,7 @@
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
 using TwitchToolkit.IncidentHelpers.Traits;
 using TwitchToolkit.Incidents;
 using Verse;
@@ -16,7 +16,7 @@ namespace TwitchToolkit.Store
 
         }
 
-        public override void ParseCommand(ChatMessage msg)
+        public override void ParseCommand(MessageDetails msg)
         {
             if (msg.Message.StartsWith("!lookup") && CommandsHandler.AllowCommand(msg))
             {
@@ -52,7 +52,7 @@ namespace TwitchToolkit.Store
             Store_Logger.LogString("Finished lookup parse");
         }
 
-        public void FindLookup(ChatMessage msg, string searchObject, string searchQuery)
+        public void FindLookup(MessageDetails msg, string searchObject, string searchQuery)
         {
             List<string> results = new List<string>();
             switch(searchObject)
@@ -150,20 +150,15 @@ namespace TwitchToolkit.Store
             }
         }
 
-        public void SendTenResults(ChatMessage msg, string searchObject, string searchQuery, string[] results)
+        public void SendTenResults(MessageDetails msg, string searchObject, string searchQuery, string[] results)
         {
-            if (results.Count() < 1) return;
+            if (results.Count() < 1) 
+                return;
 
-            string output = "Lookup for " + searchObject + " \"" + searchQuery + "\": ";
+            var prefix = $"Lookup for {searchObject} \"{searchQuery}\": ";
+            var list = string.Join(", ", results.Select(r => r.CapitalizeFirst()));
 
-            for (int i = 0; i < results.Count(); i++)
-            {
-                output += results[i].CapitalizeFirst();
-                if (i != results.Count() - 1)
-                    output += ", ";
-            }
-
-            TwitchWrapper.SendChatMessage(output);
+            msg.Reply(prefix + list);
         }
     }
 }

@@ -6,7 +6,7 @@ namespace TwitchToolkit.Incidents
 {
     public class IncidentWorker_PrisonerJoins : IncidentWorker_WandererJoin
     {
-        public IncidentWorker_PrisonerJoins(Viewer viewer)
+        public IncidentWorker_PrisonerJoins(ViewerState viewer)
         {
             this.viewer = viewer;
         }
@@ -55,6 +55,6 @@ namespace TwitchToolkit.Incidents
             return CellFinder.TryFindRandomEdgeCellWith((IntVec3 c) => map.reachability.CanReachColony(c) && !c.Fogged(map), map, CellFinder.EdgeRoadChance_Neutral, out cell);
         }
 
-        private Viewer viewer;
+        private ViewerState viewer;
     }
 }

@@ -2,20 +2,18 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
-using ToolkitCore;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
 using Verse;
 
 namespace TwitchToolkit
 {
     public class Command : Def
     {
-
-        public void RunCommand(ChatMessage message)
+        public void RunCommand(MessageDetails message)
         {
             if (command == null)
             {
-                throw new Exception("Command is null");
+                throw new InvalidOperationException("Command is null");
             }
 
             CommandDriver driver = (CommandDriver)Activator.CreateInstance(commandDriver);
@@ -55,9 +53,9 @@ namespace TwitchToolkit
 
     public class Functions
     {
-        public Viewer GetViewer(string username)
+        public ViewerState GetViewer(string username)
         {
-            return Viewers.GetViewer(username);
+            return ViewerStates.GetViewer(username);
         }
 
         public string ReturnString()
@@ -70,53 +68,51 @@ namespace TwitchToolkit
     {
         public Command command = null;
 
-        public virtual void RunCommand(ChatMessage message)
+        public virtual void RunCommand(MessageDetails message)
         {
-            Helper.Log("filtering command");
+            Helper.DebugLog("filtering command");
 
             string output = FilterTags(message, command.outputMessage);
 
-            Helper.Log("command filtered");
-
-            
+            Helper.DebugLog("command filtered");
 
             if (!UserData.IsTypeRegistered<Functions>())
             {
                 UserData.RegisterType<Functions>();
-                UserData.RegisterType<Viewer>();
+                UserData.RegisterType<ViewerState>();
             }
             
-            Helper.Log("creating script");
+            Helper.DebugLog("creating script");
 
             Script script = new Script();
             script.DebuggerEnabled = true;
             DynValue functions = UserData.Create(new Functions());
             script.Globals.Set("functions", functions);
 
-            Helper.Log("Parsing Script " + output);
+            Helper.DebugLog("Parsing Script " + output);
 
             DynValue res = script.DoString(output);
-            TwitchWrapper.SendChatMessage(res.CastToString());
+            message.Reply(res.CastToString());
 
             Log.Message(res.CastToString());            
         }
 
-        public string FilterTags(ChatMessage message, string input)
+        public string FilterTags(MessageDetails message, string input)
         {
-            Helper.Log("starting filter");
+            Helper.DebugLog("starting filter");
 
-            Viewer viewer = Viewers.GetViewer(message.Username);
+            ViewerState viewer = ViewerStates.GetViewer(message.Viewer.Username);
 
             StringBuilder output = new StringBuilder(input);
-            output.Replace("{username}", viewer.username);
-            output.Replace("{balance}", viewer.GetViewerCoins().ToString());
-            output.Replace("{karma}", viewer.GetViewerKarma().ToString());
+            output.Replace("{username}", message.Viewer.Username);
+            output.Replace("{balance}", viewer.Coins.ToString());
+            output.Replace("{karma}", viewer.Karma.ToString());
             output.Replace("{purchaselist}", ToolkitSettings.CustomPricingSheetLink);
             output.Replace("{coin-reward}", ToolkitSettings.CoinAmount.ToString());
 
             output.Replace("\n", "");
 
-            Helper.Log("starting regex");
+            Helper.DebugLog("starting regex");
 
             Regex regex = new Regex(@"\[(.*?)\]");
 
@@ -124,27 +120,10 @@ namespace TwitchToolkit
 
             foreach (Match match in matches)
             {
-                Helper.Log("found match " + match.Value);
+                Helper.DebugLog("found match " + match.Value);
                 string code = match.Value;
                 code = code.Replace("[", "");
                 code = code.Replace("]", "");
-
-                //Regex doubleReg = new Regex("double\\<(.*?)\\>");
-
-                //foreach (Match innerMatch in doubleReg.Matches(match.Value.ToString()))
-                //{
-                //    Helper.Log("found match " + innerMatch.Value);
-
-                //    string innerCode = innerMatch.Value;
-                //    innerCode = innerCode.Replace("double<", "");
-                //    innerCode = innerCode.Replace(">", "");
-
-                //    Helper.Log("executing double " + innerCode);
-
-                //    output.Replace(innerMatch.Value, MoonSharpDouble(code).ToString());
-                //}
-
-                // Helper.Log("finished inner code");
 
                 output.Replace(match.Value, MoonSharpString(code));
             }
@@ -167,44 +146,5 @@ namespace TwitchToolkit
             DynValue res = Script.RunString(script);
             return res.Number;
         }
-
-        static string TokenizeObjects()
-        {
-
-
-            return "";
-        }
     }
-
-    //public static class LUATools
-    //{
-    //    public static double Double(string code)
-    //    {
-    //        try
-    //        {
-    //            string script = code;
-
-    //            DynValue res = Script.RunString(script);
-
-    //            return res.Number;
-    //        }
-    //        catch (Exception e)
-    //        {
-    //            Log.Error(e.Message);
-
-    //            return 0d;
-    //        }
-    //    }
-    //}
-
-    //public class LUAActivator
-    //{
-    //    public static object CreateInstance(string type)
-    //    {
-    //        Type classType = Type.GetType(type);
-    //        object classObject = (object)Activator.CreateInstance(classType);
-
-    //        return classObject;
-    //    }
-    //}
 }

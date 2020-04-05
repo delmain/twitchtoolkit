@@ -1,5 +1,5 @@
 ﻿using ToolkitCore;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
 using TwitchToolkit.PawnQueue;
 using TwitchToolkit.Utilities;
 using Verse;
@@ -13,30 +13,14 @@ namespace TwitchToolkit.Twitch
 
         }
 
-        public override void ParseCommand(ChatMessage msg)
+        public override void ParseCommand(MessageDetails msg)
         {
-            Viewer viewer = Viewers.GetViewer(msg.Username);
             GameComponentPawns component = Current.Game.GetComponent<GameComponentPawns>();
 
-            ToolkitSettings.ViewerColorCodes[msg.Username.ToLower()] = msg.ColorHex;
-
-            if (component.HasUserBeenNamed(msg.Username))
+            if (component.HasUserBeenNamed(msg.Viewer.Username))
             {
-                if (!string.IsNullOrWhiteSpace(msg.ColorHex))
-                    component.PawnAssignedToUser(msg.Username).story.hairColor = msg.ColorHex.ToUnityColor();
-                else
-                    component.PawnAssignedToUser(msg.Username).story.hairColor = 
-                        new UnityEngine.Color(UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f), UnityEngine.Random.Range(0f, 1f));
-            }
-
-            if (msg.IsModerator && !viewer.mod)
-            {
-                viewer.SetAsModerator();
-            }
-
-            if (msg.IsSubscriber && !viewer.IsSub)
-            {
-                viewer.subscriber = true;
+                if (!string.IsNullOrWhiteSpace(msg.Viewer.ColorHex))
+                    component.PawnAssignedToUser(msg.Viewer.Username).story.hairColor = msg.Viewer.ColorHex.ToUnityColor();
             }
         }
     }

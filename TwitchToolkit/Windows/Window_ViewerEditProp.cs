@@ -6,13 +6,13 @@ namespace TwitchToolkit.Windows
 {
     public class Window_ViewerEditProp : Window
     {
-        public Window_ViewerEditProp(EditPropsActions action, EditProp prop, Viewer viewer = null)
+        public Window_ViewerEditProp(EditPropsActions action, EditProp prop, ViewerState viewer = null)
         {
             this.action = action;
             this.prop = prop;
             this.doCloseButton = true;
 
-            Viewers.RefreshViewers();
+            ViewerStates.RefreshViewers();
 
             if (viewer == null)
             {
@@ -23,18 +23,18 @@ namespace TwitchToolkit.Windows
             {
                 allViewers = false;
                 this.viewer = viewer;
-                viewerBuffer = "<b>" +  viewer.username + "</b>";
+                viewerBuffer = "<b>" + viewer.username + "</b>";
             }
 
             if (viewer != null && action == EditPropsActions.Set)
             {
                 if (prop == EditProp.Coins)
                 {
-                    amount = viewer.GetViewerCoins();
+                    amount = viewer.Coins;
                 }
                 else if (prop == EditProp.Karma)
                 {
-                    amount = viewer.GetViewerKarma();
+                    amount = viewer.Karma;
                 }
             }
         }
@@ -68,19 +68,19 @@ namespace TwitchToolkit.Windows
 
         private void UpdateViewers()
         {
-            List<Viewer> viewersToUpdate = new List<Viewer>();
+            List<ViewerState> viewersToUpdate = new List<ViewerState>();
             if (allViewers == true)
             {
                 if (action == EditPropsActions.Give)
                 {
-                    foreach (string viewer in Viewers.ParseViewersFromJsonAndFindActiveViewers())
+                    foreach (string viewer in ViewerStates.ParseViewersFromJsonAndFindActiveViewers())
                     {
-                        viewersToUpdate.Add(Viewers.GetViewer(viewer));
+                        viewersToUpdate.Add(ViewerStates.GetViewer(viewer));
                     }
                 }
                 else
                 {
-                    viewersToUpdate = Viewers.All;
+                    viewersToUpdate = ViewerStates.All;
                 }
             }
             else
@@ -95,31 +95,31 @@ namespace TwitchToolkit.Windows
                 case EditPropsActions.Give:
                     if (prop == EditProp.Coins)
                     {
-                        Viewers.GiveAllViewersCoins(amount, viewersToUpdate);
+                        ViewerStates.GiveAllViewersCoins(amount, viewersToUpdate);
                     }
                     else if (prop == EditProp.Karma)
                     {
-                        Viewers.GiveAllViewersKarma(amount, viewersToUpdate);
+                        ViewerStates.GiveAllViewersKarma(amount, viewersToUpdate);
                     }
                     break;
                 case EditPropsActions.Take:
                     if (prop == EditProp.Coins)
                     {
-                        Viewers.GiveAllViewersCoins(-amount, viewersToUpdate);
+                        ViewerStates.GiveAllViewersCoins(-amount, viewersToUpdate);
                     }
                     else if (prop == EditProp.Karma)
                     {
-                        Viewers.GiveAllViewersKarma(-amount, viewersToUpdate);
+                        ViewerStates.GiveAllViewersKarma(-amount, viewersToUpdate);
                     }
                     break;
                 case EditPropsActions.Set:
                     if (prop == EditProp.Coins)
                     {
-                        Viewers.SetAllViewersCoins(amount, viewersToUpdate);
+                        ViewerStates.SetAllViewersCoins(amount, viewersToUpdate);
                     }
                     else if (prop == EditProp.Karma)
                     {
-                        Viewers.SetAllViewersKarma(amount, viewersToUpdate);
+                        ViewerStates.SetAllViewersKarma(amount, viewersToUpdate);
                     }
                     break;
             }
@@ -129,7 +129,7 @@ namespace TwitchToolkit.Windows
 
         public override Vector2 InitialSize => new Vector2(300f, 178f);
 
-        private Viewer viewer = null;
+        private ViewerState viewer = null;
 
         private EditPropsActions action;
 

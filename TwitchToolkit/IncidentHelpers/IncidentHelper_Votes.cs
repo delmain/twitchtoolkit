@@ -1,4 +1,5 @@
 ﻿using RimWorld;
+using ToolkitCore.Models;
 using TwitchToolkit.Store;
 using TwitchToolkit.Storytellers;
 using Verse;
@@ -7,7 +8,7 @@ namespace TwitchToolkit.IncidentHelpers.Votes
 {
     public class ToryTalkerVote : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.Viewer = viewer;
             toryTalker = DefDatabase<StorytellerPack>.GetNamed("ToryTalker");
@@ -40,12 +41,12 @@ namespace TwitchToolkit.IncidentHelpers.Votes
 
         StorytellerPack toryTalker;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class HodlBotVote : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.Viewer = viewer;
             hodlBot = DefDatabase<StorytellerPack>.GetNamed("HodlBot");
@@ -78,6 +79,6 @@ namespace TwitchToolkit.IncidentHelpers.Votes
 
         StorytellerPack hodlBot;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 }

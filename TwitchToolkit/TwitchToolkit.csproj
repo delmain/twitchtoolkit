@@ -185,8 +185,8 @@
     <Compile Include="Incidents\IncidentWorker_SpecificAnimalsWanderIn.cs" />
     <Compile Include="Incidents\IncidentWorker_Quote.cs" />
     <Compile Include="Utilities\WebClient.cs" />
-    <Compile Include="Viewer.cs" />
-    <Compile Include="Viewers.cs" />
+    <Compile Include="ViewerState.cs" />
+    <Compile Include="ViewerStates.cs" />
     <Compile Include="Votes\Vote.cs" />
     <Compile Include="Votes\Vote_Event.cs" />
     <Compile Include="Votes\Vote_Handler.cs" />

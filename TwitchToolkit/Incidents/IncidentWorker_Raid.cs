@@ -69,7 +69,7 @@ namespace TwitchToolkit.Incidents
             parms.points = IncidentWorker_Raid.AdjustedRaidPoints(parms.points, parms.raidArrivalMode, parms.raidStrategy, parms.faction, combat);
             PawnGroupMakerParms defaultPawnGroupMakerParms = IncidentParmsUtility.GetDefaultPawnGroupMakerParms(combat, parms, false);
             List<Pawn> list = PawnGroupMakerUtility.GeneratePawns(defaultPawnGroupMakerParms, true).ToList<Pawn>();
-            List<string> viewernames = Viewers.ParseViewersFromJsonAndFindActiveViewers();
+            List<string> viewernames = ViewerStates.ParseViewersFromJsonAndFindActiveViewers();
             if (list.Count > 0 && viewernames != null)
             {
                 int count = 0;

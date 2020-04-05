@@ -10,7 +10,7 @@ namespace TwitchToolkit.Windows
     {
         public Window_Viewers()
         {
-            Viewers.RefreshViewers();
+            ViewerStates.RefreshViewers();
             if (Current.Game != null)
             {
                 this.component = Current.Game.GetComponent<GameComponentPawns>();
@@ -53,14 +53,14 @@ namespace TwitchToolkit.Windows
                     return;
                 }
 
-                List<Viewer> searchViewers = Viewers.All.Where(s =>
+                List<ViewerState> searchViewers = ViewerStates.All.Where(s =>
                         s.username.Contains(searchQuery.ToLower()) ||
                         s.username == searchQuery.ToLower()
                     ).Take(6).ToList();
 
                 Rect viewerButton = new Rect(0, searchBar.y + cellHeight, 200f, cellHeight);
 
-                foreach (Viewer viewer in searchViewers)
+                foreach (ViewerState viewer in searchViewers)
                 {
                     if (Widgets.ButtonText(viewerButton, viewer.username))
                     {
@@ -142,7 +142,7 @@ namespace TwitchToolkit.Windows
 
                 if (Widgets.ButtonText(smallButton, "Karma round"))
                 {
-                    Viewers.AwardViewersCoins();
+                    ViewerStates.AwardViewersCoins();
                 }
 
                 smallButton.y += cellHeight;
@@ -160,7 +160,7 @@ namespace TwitchToolkit.Windows
                 {
                     if (resetAllWarning)
                     {
-                        Viewers.ResetViewers();
+                        ViewerStates.ResetViewers();
                         resetAllWarning = false;
                     }
                     else
@@ -175,7 +175,7 @@ namespace TwitchToolkit.Windows
                 {
                     if (resetCoinWarning)
                     {
-                        Viewers.ResetViewersCoins();
+                        ViewerStates.ResetViewersCoins();
                         resetCoinWarning = false;
                     }
                     else
@@ -190,7 +190,7 @@ namespace TwitchToolkit.Windows
                 {
                     if (resetKarmaWarning)
                     {
-                        Viewers.ResetViewersKarma();
+                        ViewerStates.ResetViewersKarma();
                         resetKarmaWarning = false;
                     }
                     else
@@ -214,7 +214,7 @@ namespace TwitchToolkit.Windows
             smallLabel.width = 200f;
             smallLabel.y = viewerInfoHeight + 20f;
 
-            string colorCode = Viewer.GetViewerColorCode(selectedViewer.username);
+            string colorCode = ViewerState.GetViewerColorCode(selectedViewer.username);
             Widgets.Label(smallLabel, $"<b>Viewer:</b> <color=#{colorCode}>{selectedViewer.username}</color>");
 
             smallLabel.y += cellHeight;
@@ -225,22 +225,21 @@ namespace TwitchToolkit.Windows
             if (Widgets.ButtonText(smallButton, (selectedViewer.IsBanned ? "Unban" : "Ban")))
             {
                 if (selectedViewer.IsBanned)
-                {
                     selectedViewer.UnBanViewer();
-                }
                 else
-                {
                     selectedViewer.BanViewer();
-                }
             }
 
             smallLabel.y += cellHeight;
             smallButton.y = smallLabel.y;
 
-            Widgets.Label(smallLabel, "Toolkit Mod: " + (selectedViewer.mod ? "Yes" : "No"));
-            if (Widgets.ButtonText(smallButton, (selectedViewer.mod ? "Unmod" : "Mod")))
+            Widgets.Label(smallLabel, "Toolkit Mod: " + (selectedViewer.IsModerator ? "Yes" : "No"));
+            if (Widgets.ButtonText(smallButton, (selectedViewer.IsModerator ? "Unmod" : "Mod")))
             {
-                selectedViewer.mod = !selectedViewer.mod;
+                if (selectedViewer.IsModerator)
+                    selectedViewer.RemoveAsModerator();
+                else
+                    selectedViewer.SetAsModerator();
             }
 
             if (component != null)
@@ -259,11 +258,11 @@ namespace TwitchToolkit.Windows
 
             smallLabel.y += cellHeight;
 
-            Widgets.Label(smallLabel, "Coins: " + selectedViewer.GetViewerCoins());
+            Widgets.Label(smallLabel, "Coins: " + selectedViewer.Coins);
 
             smallLabel.y += cellHeight;
 
-            Widgets.Label(smallLabel, "Karma: " + selectedViewer.GetViewerKarma() + "%");
+            Widgets.Label(smallLabel, "Karma: " + selectedViewer.Karma + "%");
 
             smallButton.y = smallLabel.y + cellHeight;
             smallButton.x = 0f;
@@ -272,10 +271,10 @@ namespace TwitchToolkit.Windows
             {
                 if (resetWarning)
                 {
-                    Viewers.All = Viewers.All.Where(s => s != selectedViewer).ToList();
+                    ViewerStates.All = ViewerStates.All.Where(s => s != selectedViewer).ToList();
                     string username = selectedViewer.username;
                     resetWarning = false;
-                    SelectViewer(Viewers.GetViewer(username));
+                    SelectViewer(ViewerStates.GetViewer(username));
                 }
                 else
                 {
@@ -302,7 +301,7 @@ namespace TwitchToolkit.Windows
             Find.WindowStack.Add(window);
         }
 
-        public void SelectViewer(Viewer viewer)
+        public void SelectViewer(ViewerState viewer)
         {
             this.selectedViewer = viewer;
             this.viewerBuffer = viewer.username;
@@ -328,7 +327,7 @@ namespace TwitchToolkit.Windows
 
         private GameComponentPawns component = null;
 
-        private Viewer selectedViewer = null;
+        private ViewerState selectedViewer = null;
 
         private string viewerBuffer = "";
 

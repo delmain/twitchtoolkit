@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Linq;
 using ToolkitCore;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
 using TwitchToolkit.Store;
 using Verse;
 
@@ -8,27 +9,27 @@ namespace TwitchToolkit.Commands.ModCommands
 {
     public class RefreshViewers : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
-            TwitchToolkitDev.WebRequest_BeginGetResponse.Main("https://tmi.twitch.tv/group/user/" + ToolkitSettings.Channel.ToLower() + "/chatters", new Func<TwitchToolkitDev.RequestState, bool>(Viewers.SaveUsernamesFromJsonResponse));
+            TwitchToolkitDev.WebRequest_BeginGetResponse.Main("https://tmi.twitch.tv/group/user/" + ToolkitSettings.Channel.ToLower() + "/chatters", new Func<TwitchToolkitDev.RequestState, bool>(ViewerStates.SaveUsernamesFromJsonResponse));
 
-            TwitchWrapper.SendChatMessage($"@{message.Username} viewers have been refreshed.");
+            message.Reply("Viewers have been refreshed.");
         }
     }
 
     public class KarmaRound : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
-            Viewers.AwardViewersCoins();
+            ViewerStates.AwardViewersCoins();
 
-            TwitchWrapper.SendChatMessage($"@{message.Username} rewarding all active viewers coins.");
+            message.Reply("Rewarding all active viewers coins.");
         }
     }
 
     public class GiveAllCoins : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
             try
             {
@@ -43,12 +44,12 @@ namespace TwitchToolkit.Commands.ModCommands
 
                 if (isNumeric)
                 {
-                    foreach (Viewer vwr in Viewers.All)
+                    foreach (ViewerState vwr in ViewerStates.All)
                     {
                         vwr.GiveViewerCoins(amount);
                     }
 
-                    TwitchWrapper.SendChatMessage($"@{message.Username} " + Helper.ReplacePlaceholder("TwitchToolkitGiveAllCoins".Translate(), amount: amount.ToString()));
+                    message.Reply(Helper.ReplacePlaceholder("TwitchToolkitGiveAllCoins".Translate(), amount: amount.ToString()));
                 }
             }
             catch (InvalidCastException e)
@@ -60,10 +61,11 @@ namespace TwitchToolkit.Commands.ModCommands
 
     public class GiveCoins : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
             try
             {
+                Log.Message($"GiveCoins command from {message.Viewer.Username}");
                 string[] command = message.Message.Split(' ');
 
                 if (command.Length < 3)
@@ -73,9 +75,9 @@ namespace TwitchToolkit.Commands.ModCommands
 
                 string receiver = command[1].Replace("@", "");
 
-                if (message.Username.ToLower() != ToolkitSettings.Channel.ToLower() && receiver.ToLower() == message.Username.ToLower())
+                if (!message.Viewer.IsBroadcaster && string.Equals(message.Viewer.Username, receiver, StringComparison.CurrentCultureIgnoreCase))
                 {
-                    TwitchWrapper.SendChatMessage($"@{message.Username} " + "TwitchToolkitModCannotGiveCoins".Translate());
+                    message.Reply("TwitchToolkitModCannotGiveCoins".Translate());
                     return;
                 }
 
@@ -83,12 +85,14 @@ namespace TwitchToolkit.Commands.ModCommands
                 bool isNumeric = int.TryParse(command[2], out amount);
                 if (isNumeric)
                 {
-                    Viewer giftee = Viewers.GetViewer(receiver);
+                    // If the user hasn't been online in this stream, there won't be a Viewer object for them, in that case, default to using whatever the gifter put for receiver
+                    var gifteeViewer = Viewers.FindByUsername(receiver) ?? new Viewer(DisplayName: receiver);
+                    var gifteeState = ViewerStates.GetViewer(receiver);
 
-                    Helper.Log($"Giving viewer {giftee.username} {amount} coins");
-                    giftee.GiveViewerCoins(amount);
-                    TwitchWrapper.SendChatMessage($"@{message.Username} " + Helper.ReplacePlaceholder("TwitchToolkitGivingCoins".Translate(), viewer: giftee.username, amount: amount.ToString(), newbalance: giftee.coins.ToString()));
-                    Store_Logger.LogGiveCoins(message.Username, giftee.username, amount);
+                    Helper.Log($"Giving viewer {gifteeViewer.DisplayName} {amount} coins");
+                    gifteeState.GiveViewerCoins(amount);
+                    message.Reply(Helper.ReplacePlaceholder("TwitchToolkitGivingCoins".Translate(), viewer: gifteeViewer.DisplayName, amount: amount.ToString(), newbalance: gifteeState.Coins.ToString()));
+                    Store_Logger.LogGiveCoins(message.Viewer.Username, gifteeViewer.DisplayName, amount);
                 }
             }
             catch (InvalidCastException e)
@@ -100,7 +104,7 @@ namespace TwitchToolkit.Commands.ModCommands
 
     public class CheckUser : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
             try
             {
@@ -113,9 +117,13 @@ namespace TwitchToolkit.Commands.ModCommands
 
                 string target = command[1].Replace("@", "");
 
-                Viewer targeted = Viewers.GetViewer(target);
-                TwitchWrapper.SendChatMessage($"@{message.Username} " + Helper.ReplacePlaceholder("TwitchToolkitCheckUser".Translate(), viewer: targeted.username, amount: targeted.coins.ToString(), karma: targeted.GetViewerKarma().ToString()));
-
+                // If the user hasn't been online this stream, they won't have a viewer object, in that case, use what was entered.
+                var targetedViewer = Viewers.FindByUsername(target) ?? new Viewer(DisplayName: target);
+                ViewerState targeted = ViewerStates.GetViewer(target);
+                message.Reply(Helper.ReplacePlaceholder("TwitchToolkitCheckUser".Translate(), 
+                    viewer: targetedViewer.DisplayName, 
+                    amount: targeted.Coins.ToString(), 
+                    karma: targeted.Karma.ToString()));
             }
             catch (InvalidCastException e)
             {
@@ -126,7 +134,7 @@ namespace TwitchToolkit.Commands.ModCommands
 
     public class SetKarma : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
             try
             {
@@ -142,9 +150,11 @@ namespace TwitchToolkit.Commands.ModCommands
                 bool isNumeric = int.TryParse(command[2], out amount);
                 if (isNumeric)
                 {
-                    Viewer targeted = Viewers.GetViewer(target);
+                    ViewerState targeted = ViewerStates.GetViewer(target);
+                    var targetedViewer = Viewers.All.FirstOrDefault(v => string.Equals(target, v.Username, StringComparison.CurrentCultureIgnoreCase));
+                    var username = targetedViewer?.DisplayName ?? target;
                     targeted.SetViewerKarma(amount);
-                    TwitchWrapper.SendChatMessage($"@{message.Username}" + Helper.ReplacePlaceholder("TwitchToolkitSetKarma".Translate(), viewer: targeted.username, karma: amount.ToString()));
+                    message.Reply(Helper.ReplacePlaceholder("TwitchToolkitSetKarma".Translate(), viewer: targeted.username, karma: amount.ToString()));
                 }
             }
             catch (InvalidCastException e)
@@ -156,17 +166,17 @@ namespace TwitchToolkit.Commands.ModCommands
 
     public class ToggleCoins : CommandDriver
     {
-        public override void RunCommand(ChatMessage message)
+        public override void RunCommand(MessageDetails message)
         {
             if (ToolkitSettings.EarningCoins)
             {
                 ToolkitSettings.EarningCoins = false;
-                TwitchWrapper.SendChatMessage($"@{message.Username} " + "TwitchToolkitEarningCoinsMessage".Translate() + " " + "TwitchToolkitOff".Translate());
+                message.Reply($"{"TwitchToolkitEarningCoinsMessage".Translate()} {"TwitchToolkitOff".Translate()}");
             }
             else
             {
                 ToolkitSettings.EarningCoins = true;
-                TwitchWrapper.SendChatMessage($"@{message.Username} " + "TwitchToolkitEarningCoinsMessage".Translate() + " " + "TwitchToolkitOn".Translate());
+                message.Reply($"{"TwitchToolkitEarningCoinsMessage".Translate()} {"TwitchToolkitOn".Translate()}");
             }
         }
     }

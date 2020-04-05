@@ -5,13 +5,14 @@ using System.Linq;
 using Verse;
 using TwitchToolkit.Utilities;
 using TwitchToolkit.Store;
+using ToolkitCore.Models;
 
 namespace TwitchToolkit
 {
-    public static class Viewers
+    public static class ViewerStates
     {
         public static string jsonallviewers;
-        public static List<Viewer> All = new List<Viewer>();
+        public static List<ViewerState> All = new List<ViewerState>();
 
         public static void AwardViewersCoins(int setamount = 0)
         {
@@ -20,7 +21,7 @@ namespace TwitchToolkit
             {
                 foreach (string username in usernames)
                 {
-                    Viewer viewer = GetViewer(username);
+                    ViewerState viewer = GetViewer(username);
 
                     if (viewer.IsBanned)
                     {
@@ -34,19 +35,21 @@ namespace TwitchToolkit
                     else
                     {
                         int baseCoins = ToolkitSettings.CoinAmount;
-                        float baseMultiplier = (float)viewer.GetViewerKarma() / 100f;
+                        float baseMultiplier = (float)viewer.Karma / 100f;
 
                         if (viewer.IsSub)
                         {
                             baseCoins += ToolkitSettings.SubscriberExtraCoins;
                             baseMultiplier *= ToolkitSettings.SubscriberCoinMultiplier;
                         }
-                        else if (viewer.IsVIP)
+                        
+                        if (viewer.IsVIP)
                         {
                             baseCoins += ToolkitSettings.VIPExtraCoins;
                             baseMultiplier *= ToolkitSettings.VIPCoinMultiplier;
                         }
-                        else if (viewer.mod)
+                        
+                        if (viewer.IsModerator)
                         {
                             baseCoins += ToolkitSettings.ModExtraCoins;
                             baseMultiplier *= ToolkitSettings.ModCoinMultiplier;
@@ -78,11 +81,11 @@ namespace TwitchToolkit
             }
         }
 
-        public static void GiveAllViewersCoins(int amount, List<Viewer> viewers = null)
+        public static void GiveAllViewersCoins(int amount, List<ViewerState> viewers = null)
         {
             if (viewers != null)
             {
-                foreach (Viewer viewer in viewers)
+                foreach (ViewerState viewer in viewers)
                 {
                     viewer.GiveViewerCoins(amount);
                 }
@@ -95,8 +98,8 @@ namespace TwitchToolkit
             {
                 foreach (string username in usernames)
                 {
-                    Viewer viewer = Viewers.GetViewer(username);
-                    if (viewer != null && viewer.GetViewerKarma() > 1)
+                    ViewerState viewer = ViewerStates.GetViewer(username);
+                    if (viewer != null && viewer.Karma > 1)
                     {
                         viewer.GiveViewerCoins(amount);
                     }
@@ -104,11 +107,11 @@ namespace TwitchToolkit
             }
         }
 
-        public static void SetAllViewersCoins(int amount, List<Viewer> viewers = null)
+        public static void SetAllViewersCoins(int amount, List<ViewerState> viewers = null)
         {
             if (viewers != null)
             {
-                foreach (Viewer viewer in viewers)
+                foreach (ViewerState viewer in viewers)
                 {
                     viewer.SetViewerCoins(amount);
                 }
@@ -118,7 +121,7 @@ namespace TwitchToolkit
 
             if (All != null)
             {
-                foreach (Viewer viewer in All)
+                foreach (ViewerState viewer in All)
                 {
                     if (viewer != null)
                     {
@@ -128,13 +131,13 @@ namespace TwitchToolkit
             }
         }
 
-        public static void GiveAllViewersKarma(int amount, List<Viewer> viewers = null)
+        public static void GiveAllViewersKarma(int amount, List<ViewerState> viewers = null)
         {
             if (viewers != null)
             {
-                foreach (Viewer viewer in viewers)
+                foreach (ViewerState viewer in viewers)
                 {
-                    viewer.SetViewerKarma(Math.Min(ToolkitSettings.KarmaCap, viewer.GetViewerKarma() + amount));
+                    viewer.SetViewerKarma(Math.Min(ToolkitSettings.KarmaCap, viewer.Karma + amount));
                 }
 
                 return;
@@ -145,22 +148,22 @@ namespace TwitchToolkit
             {
                 foreach (string username in usernames)
                 {
-                    Viewer viewer = Viewers.GetViewer(username);
-                    if (viewer != null && viewer.GetViewerKarma() > 1)
+                    ViewerState viewer = ViewerStates.GetViewer(username);
+                    if (viewer != null && viewer.Karma > 1)
                     {
-                        viewer.SetViewerKarma( Math.Min(ToolkitSettings.KarmaCap, viewer.GetViewerKarma() + amount) );
+                        viewer.SetViewerKarma( Math.Min(ToolkitSettings.KarmaCap, viewer.Karma + amount) );
                     }
                 }
             }
         }
 
-        public static void TakeAllViewersKarma(int amount, List<Viewer> viewers = null)
+        public static void TakeAllViewersKarma(int amount, List<ViewerState> viewers = null)
         {
             if (viewers != null)
             {
-                foreach (Viewer viewer in viewers)
+                foreach (ViewerState viewer in viewers)
                 {
-                    viewer.SetViewerKarma(Math.Max(0, viewer.GetViewerKarma() - amount));
+                    viewer.SetViewerKarma(Math.Max(0, viewer.Karma - amount));
                 }
 
                 return;
@@ -168,21 +171,21 @@ namespace TwitchToolkit
 
             if (All != null)
             {
-                foreach (Viewer viewer in All)
+                foreach (ViewerState viewer in All)
                 {
                     if (viewer != null)
                     {
-                        viewer.SetViewerKarma( Math.Max(0, viewer.GetViewerKarma() - amount) );
+                        viewer.SetViewerKarma( Math.Max(0, viewer.Karma - amount) );
                     }
                 }
             }
         }
 
-        public static void SetAllViewersKarma(int amount, List<Viewer> viewers = null)
+        public static void SetAllViewersKarma(int amount, List<ViewerState> viewers = null)
         {
             if (viewers != null)
             {
-                foreach (Viewer viewer in viewers)
+                foreach (ViewerState viewer in viewers)
                 {
                     viewer.SetViewerKarma(amount);
                 }
@@ -192,7 +195,7 @@ namespace TwitchToolkit
 
             if (All != null)
             {
-                foreach (Viewer viewer in All)
+                foreach (ViewerState viewer in All)
                 {
                     if (viewer != null)
                     {
@@ -214,17 +217,20 @@ namespace TwitchToolkit
             }
 
             var parsed = JSON.Parse(json);
+            var chatters = parsed["chatters"];
             List<JSONArray> groups = new List<JSONArray>();
-            groups.Add(parsed["chatters"]["moderators"].AsArray);
-            groups.Add(parsed["chatters"]["staff"].AsArray);
-            groups.Add(parsed["chatters"]["admins"].AsArray);
-            groups.Add(parsed["chatters"]["global_mods"].AsArray);
-            groups.Add(parsed["chatters"]["viewers"].AsArray);
-            groups.Add(parsed["chatters"]["vips"].AsArray);
+            groups.Add(chatters["moderators"].AsArray);
+            groups.Add(chatters["staff"].AsArray);
+            groups.Add(chatters["admins"].AsArray);
+            groups.Add(chatters["global_mods"].AsArray);
+            groups.Add(chatters["viewers"].AsArray);
+            groups.Add(chatters["vips"].AsArray);
+            groups.Add(chatters["broadcaster"].AsArray);
             foreach (JSONArray group in groups)
             {
                 foreach (JSONNode username in group)
                 {
+                    // TODO either fix this or more realistically move it to ToolkitCore since it's user management
                     string usernameconvert = username.ToString();
                     usernameconvert = usernameconvert.Remove(0, 1);
                     usernameconvert = usernameconvert.Remove(usernameconvert.Length - 1, 1);
@@ -234,13 +240,14 @@ namespace TwitchToolkit
 
             // for bigger streams, the chatter api can get buggy. Therefore we add viewers active in chat within last 30 minutes just in case.
 
-            foreach (Viewer viewer in All.Where(s => s.last_seen != null && TimeHelper.MinutesElapsed(s.last_seen) <= ToolkitSettings.TimeBeforeHalfCoins))
+            foreach (ViewerState viewer in All.Where(s => s.last_seen != null && TimeHelper.MinutesElapsed(s.last_seen) <= ToolkitSettings.TimeBeforeHalfCoins))
             {
                 if (!usernames.Contains(viewer.username))
                 {
                     Helper.Log("Viewer " + viewer.username + " added to active viewers through chat participation but not in chatter list.");
                     usernames.Add(viewer.username);
                 }
+                // TODO this doesn't do anything except put logs in chat
             }
 
             return usernames;
@@ -254,22 +261,22 @@ namespace TwitchToolkit
 
         public static void ResetViewers()
         {
-            All = new List<Viewer>();
+            All = new List<ViewerState>();
         }
 
-        public static Viewer GetViewer(string user)
+        public static ViewerState GetState(Viewer viewer)
         {
-            Viewer viewer = All.Find(x => x.username == user.ToLower());
-            if (viewer == null)
-            {
-                viewer = new Viewer(user);
-                viewer.SetViewerCoins((int)ToolkitSettings.StartingBalance);
-                viewer.karma = ToolkitSettings.StartingKarma;
-            }
-            return viewer;
+            return All.FirstOrDefault(v => v.username == viewer.Username) 
+                ?? new ViewerState(viewer.Username);
         }
 
-        public static Viewer GetViewerById(int id)
+        public static ViewerState GetViewer(string user)
+        {
+            return All.Find(x => x.username == user.ToLower())
+                ?? new ViewerState(user);
+        }
+
+        public static ViewerState GetViewerById(int id)
         {
             return All.Find(s => s.id == id);
         }
@@ -277,20 +284,21 @@ namespace TwitchToolkit
         public static void RefreshViewers()
         {
             TwitchToolkitDev.WebRequest_BeginGetResponse.Main(
-                "https://tmi.twitch.tv/group/user/" +
-                ToolkitSettings.Channel.ToLower() +
-                "/chatters", new Func<TwitchToolkitDev.RequestState, bool>(Viewers.SaveUsernamesFromJsonResponse)
-                );
+                $"https://tmi.twitch.tv/group/user/{ToolkitSettings.Channel.ToLower()}/chatters", 
+                SaveUsernamesFromJsonResponse
+            );
         }
 
         public static void ResetViewersCoins()
         {
-            foreach(Viewer viewer in All) viewer.coins = (int)ToolkitSettings.StartingBalance;
+            foreach(ViewerState viewer in All) 
+                viewer.SetViewerCoins(ToolkitSettings.StartingBalance);
         }
 
         public static void ResetViewersKarma()
         {
-            foreach (Viewer viewer in All) viewer.karma = (int)ToolkitSettings.StartingKarma;
+            foreach (ViewerState viewer in All) 
+                viewer.SetViewerKarma(ToolkitSettings.StartingKarma);
         }
     }
 }

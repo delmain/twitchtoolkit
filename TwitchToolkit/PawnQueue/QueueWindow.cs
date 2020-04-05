@@ -88,7 +88,7 @@ namespace TwitchToolkit.PawnQueue
             queueButtons.y += 26;
             if (Widgets.ButtonText(queueButtons, "Ban Viewer from Queue"))
             {
-                Viewer viewer = Viewers.GetViewer(selectedUsername);
+                var viewer = ViewerStates.GetViewer(selectedUsername);
                 viewer.BanViewer();
             }
         }

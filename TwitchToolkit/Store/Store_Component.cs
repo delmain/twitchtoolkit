@@ -17,7 +17,7 @@ namespace TwitchToolkit.Store
         public override void GameComponentTick()
         {
             if (Find.TickManager.TicksGame % 1000 != 0)
-            return;
+                return;
 
             CleanLog();
         }

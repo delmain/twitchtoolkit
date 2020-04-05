@@ -138,7 +138,7 @@ namespace TwitchToolkit.Windows
 
         void UpdateTrackerStats()
         {
-            viewerCount = Viewers.jsonallviewers == null ? 0 : Viewers.ParseViewersFromJsonAndFindActiveViewers().Count;
+            viewerCount = ViewerStates.jsonallviewers == null ? 0 : ViewerStates.ParseViewersFromJsonAndFindActiveViewers().Count;
 
             cooldownsByTypeEnabled = ToolkitSettings.MaxEvents;
 

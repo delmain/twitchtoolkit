@@ -1,6 +1,7 @@
 ﻿using RimWorld;
 using System.Collections.Generic;
 using ToolkitCore;
+using ToolkitCore.Models;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.Store;
 using Verse;
@@ -9,41 +10,33 @@ namespace TwitchToolkit.IncidentHelpers.Raids
 {
     public class Raid : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
             parms.raidStrategy = RaidStrategyDefOf.ImmediateAttack;
             parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeWalkIn;
-            
-            worker = new Incidents.IncidentWorker_RaidEnemy();
-            worker.def = IncidentDefOf.RaidEnemy;
+
+            worker = new Incidents.IncidentWorker_RaidEnemy
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
 
             return worker.CanFireNow(parms);
         }
@@ -57,7 +50,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting raid with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for raid.");
+            TwitchWrapper.SendChatMessage("Could not generate parameters for raid.");
         }
 
         public int pointsWager = 0;
@@ -66,40 +59,30 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class DropRaid : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             Helper.Log("Finding target");
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
@@ -107,8 +90,10 @@ namespace TwitchToolkit.IncidentHelpers.Raids
             parms.raidArrivalMode = PawnsArrivalModeDefOf.CenterDrop;
             parms.faction = Find.FactionManager.RandomEnemyFaction(false, false, false, TechLevel.Industrial);
 
-            worker = new Incidents.IncidentWorker_RaidEnemy();
-            worker.def = IncidentDefOf.RaidEnemy;
+            worker = new Incidents.IncidentWorker_RaidEnemy
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
 
             return worker.CanFireNow(parms);
         }
@@ -125,7 +110,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 return;
             }
 
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for drop raid.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for drop raid.");
         }
 
         public int pointsWager = 0;
@@ -134,47 +119,38 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class SapperRaid : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
             parms.raidStrategy = DefDatabase<RaidStrategyDef>.GetNamed("ImmediateAttackSappers");
-            //parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeDrop;
             parms.faction = Find.FactionManager.RandomEnemyFaction(false, false, false, TechLevel.Industrial);
 
-            worker = new Incidents.IncidentWorker_RaidEnemy();
-            worker.def = IncidentDefOf.RaidEnemy;
+            worker = new Incidents.IncidentWorker_RaidEnemy
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
 
             return worker.CanFireNow(parms);
         }
@@ -188,7 +164,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting sapper raid with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for sapper raid.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for sapper raid.");
         }
 
         public int pointsWager = 0;
@@ -197,38 +173,28 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class SiegeRaid : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
@@ -236,8 +202,10 @@ namespace TwitchToolkit.IncidentHelpers.Raids
             //parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeDrop;
             parms.faction = Find.FactionManager.RandomEnemyFaction(false, false, false, TechLevel.Industrial);
 
-            worker = new Incidents.IncidentWorker_RaidEnemy();
-            worker.def = IncidentDefOf.RaidEnemy;
+            worker = new Incidents.IncidentWorker_RaidEnemy
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
 
             return worker.CanFireNow(parms);
         }
@@ -251,7 +219,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting siege raid with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for siege raid.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for siege raid.");
         }
 
         public int pointsWager = 0;
@@ -260,38 +228,28 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class MechanoidRaid : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
@@ -299,8 +257,10 @@ namespace TwitchToolkit.IncidentHelpers.Raids
             parms.raidArrivalMode = PawnsArrivalModeDefOf.EdgeDrop;
             parms.faction = Find.FactionManager.OfMechanoids;
 
-            worker = new Incidents.IncidentWorker_RaidEnemy();
-            worker.def = IncidentDefOf.RaidEnemy;
+            worker = new Incidents.IncidentWorker_RaidEnemy
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
 
             return worker.CanFireNow(parms);
         }
@@ -314,7 +274,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting mechanoid raid with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for mechanoid raid.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for mechanoid raid.");
         }
 
         public int pointsWager = 0;
@@ -323,51 +283,43 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class Infestation : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatBig, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, StorytellerUtility.DefaultThreatPointsNow(target));
             parms.forced = true;
 
-            worker = new IncidentWorker_Infestation();
-            worker.def = IncidentDef.Named("Infestation");
+            worker = new IncidentWorker_Infestation
+            {
+                def = IncidentDef.Named("Infestation")
+            };
 
             bool canFire = worker.CanFireNow(parms, true);
 
             if (!canFire)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} no suitable location for infestation to occur.");
+                message.Reply("No suitable location for infestation to occur.");
             }
 
             return canFire;
@@ -382,7 +334,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting infestation raid with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for infestation.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for infestation.");
         }
 
         public int pointsWager = 0;
@@ -391,45 +343,37 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class ManhunterPack : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
 
-            worker = new IncidentWorker_ManhunterPack();
-            worker.def = IncidentDefOf.RaidEnemy;
-            
+            worker = new IncidentWorker_ManhunterPack
+            {
+                def = IncidentDefOf.RaidEnemy
+            };
+
             return worker.CanFireNow(parms);
         }
 
@@ -442,7 +386,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting manhunterpack with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for manhunter pack.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for manhunter pack.");
         }
 
         public int pointsWager = 0;
@@ -451,38 +395,28 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class Predators : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             parms = StorytellerUtility.DefaultParmsNow(IncidentCategoryDefOf.ThreatSmall, target);
             parms.points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, parms.points);
@@ -524,7 +458,7 @@ namespace TwitchToolkit.IncidentHelpers.Raids
                 VariablesHelpers.SendPurchaseMessage($"Starting predator pack with {pointsWager} points wagered and {(int)parms.points} raid points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} could not generate parms for manhunter pack.");
+            TwitchWrapper.SendChatMessage($"Could not generate parameters for manhunter pack.");
         }
 
         public int pointsWager = 0;
@@ -533,6 +467,6 @@ namespace TwitchToolkit.IncidentHelpers.Raids
         public IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 }

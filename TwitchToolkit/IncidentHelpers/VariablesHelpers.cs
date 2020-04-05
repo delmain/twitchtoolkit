@@ -3,23 +3,24 @@ using System;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.Store;
 using Verse;
+using ToolkitCore.Models;
 
 namespace TwitchToolkit.IncidentHelpers
 {
     public static class VariablesHelpers
     {
-        public static void ViewerDidWrongSyntax(string username, string syntax, bool separateChannel = false)
+        public static void ViewerDidWrongSyntax(MessageDetails message, string syntax, bool separateChannel = false)
         {
-            TwitchWrapper.SendChatMessage($"@{username} syntax is {syntax}");
+            message.Reply($"Syntax is {syntax}.");
         }
 
-        public static bool PointsWagerIsValid(string wager, Viewer viewer, ref int pointsWager, ref StoreIncidentVariables incident, bool separateChannel = false, int quantity = 1, int maxPrice = 25000)
+        public static bool PointsWagerIsValid(string wager, MessageDetails message, ViewerState viewer, ref int pointsWager, ref StoreIncidentVariables incident, bool separateChannel = false, int quantity = 1, int maxPrice = 25000)
         {
             try
             {
                 if (! int.TryParse( wager, out checked(pointsWager) ) )
                 {
-                    ViewerDidWrongSyntax(viewer.username, incident.syntax);
+                    ViewerDidWrongSyntax(message, incident.syntax);
                     return false;
                 }
                 pointsWager = checked(pointsWager * quantity);
@@ -27,29 +28,28 @@ namespace TwitchToolkit.IncidentHelpers
             catch (OverflowException e)
             {
                 Helper.Log(e.Message);
-                TwitchWrapper.SendChatMessage($"@{viewer.username} points wager is invalid.");
+                message.Reply($"Points wager is invalid.");
                 return false;
             }
 
             if (incident.maxWager > 0 && incident.maxWager > incident.cost && pointsWager > incident.maxWager)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you cannot spend more than {incident.maxWager} coins on {incident.abbreviation.CapitalizeFirst()}");
+                message.Reply($"You cannot spend more than {incident.maxWager} coins on {incident.abbreviation.CapitalizeFirst()}");
                 return false;
             }
 
-            //|| (incident.minPointsToFire > 0 && pointsWager < incident.minPointsToFire)
             if (pointsWager < incident.cost || pointsWager < incident.minPointsToFire)
             {
-                TwitchWrapper.SendChatMessage(Helper.ReplacePlaceholder(
+                message.Reply(Helper.ReplacePlaceholder(
                     "TwitchToolkitMinPurchaseNotMet".Translate(), 
-                    viewer: viewer.username, 
                     amount: pointsWager.ToString(), 
                     first: incident.cost.ToString()
                 ));
                 return false;
             }
 
-            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(viewer, pointsWager)) return false;
+            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(message, viewer, pointsWager)) 
+                return false;
 
             return true;
         }

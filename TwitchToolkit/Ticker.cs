@@ -152,10 +152,10 @@ namespace TwitchToolkit
                 {
                     _lastCoinReward = time;
                 }
-                else if (ToolkitSettings.EarningCoins && ((time - _lastCoinReward) >= ToolkitSettings.CoinInterval) && Viewers.jsonallviewers != null)
+                else if (ToolkitSettings.EarningCoins && ((time - _lastCoinReward) >= ToolkitSettings.CoinInterval) && ViewerStates.jsonallviewers != null)
                 {
                     _lastCoinReward = time;
-                    Viewers.AwardViewersCoins();
+                    ViewerStates.AwardViewersCoins();
                 }
                 if (_lastMinute < 0)
                 {
@@ -165,7 +165,7 @@ namespace TwitchToolkit
                 {
                     _lastMinute = time;
                     Toolkit.JobManager.CheckAllJobs();
-                    Viewers.RefreshViewers();
+                    ViewerStates.RefreshViewers();
                 }   
             }
             catch (Exception ex)

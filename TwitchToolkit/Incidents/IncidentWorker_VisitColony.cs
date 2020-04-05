@@ -12,7 +12,7 @@ namespace TwitchToolkit.Incidents
 
         }
 
-        public IncidentWorker_VisitColony(Viewer viewer = null)
+        public IncidentWorker_VisitColony(ViewerState viewer = null)
         {
             this.viewer = viewer;
         }
@@ -152,6 +152,6 @@ namespace TwitchToolkit.Incidents
             }
         };
 
-        private Viewer viewer;
+        private ViewerState viewer;
     }
 }

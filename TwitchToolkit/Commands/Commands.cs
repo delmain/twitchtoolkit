@@ -1,37 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using ToolkitCore.Models;
+using System;
 using System.Linq;
-using TwitchLib.Client.Models;
 using Verse;
 
 namespace TwitchToolkit
 {
     public static class CommandsHandler
     {
-        public static void CheckCommand(ChatMessage msg)
+        public static void CheckCommand(MessageDetails msg)
         {
-
             if (msg == null)
-            {
                 return;
-            }
 
             if (msg.Message == null)
-            {
                 return;
-            }
 
             string message = msg.Message;
-            string user = msg.Username;
+            string user = msg.Viewer.Username;
             if (message.Split(' ')[0] == "/w")
             {
-                List<string> messagewhisper = message.Split(' ').ToList();
-                messagewhisper.RemoveAt(0);
-                message = string.Join(" ", messagewhisper.ToArray());
-                Helper.Log(message);
+                message = message.Substring(2); // remove /w at the beginning
+                Helper.DebugLog($"Cleaned whisper: {message}");
             }
 
-            Viewer viewer = Viewers.GetViewer(user);
+            ViewerState viewer = ViewerStates.GetViewer(user);
             viewer.last_seen = DateTime.Now;
 
             if (viewer.IsBanned)
@@ -40,64 +32,31 @@ namespace TwitchToolkit
             }
 
             Command commandDef = DefDatabase<Command>.AllDefs.ToList().Find(s => msg.Message.StartsWith("!" + s.command));
-
             if (commandDef != null)
             {
                 bool runCommand = true;
 
-                if (commandDef.requiresMod && (!viewer.mod && viewer.username.ToLower() != ToolkitSettings.Channel.ToLower()))
-                {
+                if (commandDef.requiresMod && !(viewer.IsModerator || viewer.IsBroadcaster))
                     runCommand = false;
-                }
 
-                if (commandDef.requiresAdmin && msg.Username.ToLower() != ToolkitSettings.Channel.ToLower())
-                {
+                if (commandDef.requiresAdmin && !viewer.IsBroadcaster)
                     runCommand = false;
-                }
 
                 if (!commandDef.enabled)
-                {
                     runCommand = false;
-                }
 
                 if (commandDef.shouldBeInSeparateRoom && !AllowCommand(msg))
-                {
                     runCommand = false;
-                }
 
                 if (runCommand)
-                {
                     commandDef.RunCommand(msg);
-                }
-                
             }
-
-            //Deprecated,  Use RimTwitch Library instead
-
-            //List<TwitchInterfaceBase> modExtensions = Current.Game.components.OfType<TwitchInterfaceBase>().ToList();
-
-            //if (modExtensions == null)
-            //{
-            //    return;
-            //}
-
-            //foreach(TwitchInterfaceBase parser in modExtensions)
-            //{
-            //    parser.ParseCommand(msg);
-            //}
         }
 
-        public static bool AllowCommand(ChatMessage msg)
+        [Obsolete]
+        public static bool AllowCommand(MessageDetails msg)
         {
             return true;
         }
-
-        public static bool SendToChatroom(ChatMessage msg)
-        {
-            return true;
-        }
-
-        static DateTime modsCommandCooldown = DateTime.MinValue;
-        static DateTime aliveCommandCooldown = DateTime.MinValue;
     }
 }

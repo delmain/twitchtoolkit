@@ -12,7 +12,7 @@ namespace TwitchToolkit
     {
         public static bool FirstTimeInstallation = true;
 
-        #region TwitchSettings (redirected from ToolkitCore
+        #region TwitchSettings (redirected from ToolkitCore)
 
         public static string Channel
         {
@@ -136,9 +136,33 @@ namespace TwitchToolkit
         #endregion
 
         #region ViewerData
-        public static Dictionary<string, string> ViewerColorCodes = new Dictionary<string, string>();
-        public static Dictionary<string, bool> ViewerModerators = new Dictionary<string, bool>();
-        public static List<string> BannedViewers = new List<string>();
+        private static Dictionary<string, string> viewerColorCodes = new Dictionary<string, string>();
+        private static Dictionary<string, bool> viewerModerators = new Dictionary<string, bool>();
+        private static List<string> bannedViewers = new List<string>();
+
+        private static readonly object vccLock = new object();
+        private static readonly object vmLock = new object();
+        private static readonly object bvLock = new object();
+
+        public static Dictionary<string, string> ViewerColorCodes => SafeGet(ref viewerColorCodes, vccLock);
+        public static Dictionary<string, bool> ViewerModerators => SafeGet(ref viewerModerators, vmLock);
+        public static List<string> BannedViewers => SafeGet(ref bannedViewers, bvLock);
+
+        private static T SafeGet<T>(ref T obj, object locker) where T : new()
+        {
+            if (obj == null)
+            {
+                lock (locker)
+                {
+                    if (obj == null)
+                    {
+                        obj = new T();
+                    }
+                }
+            }
+
+            return obj;
+        }
         #endregion
 
         #region ViewerSettings
@@ -430,9 +454,9 @@ namespace TwitchToolkit
             Scribe_Values.Look(ref EventsHaveCooldowns, "EventsHaveCooldowns", true);
             Scribe_Values.Look(ref EventCooldownInterval, "EventCooldownInterval", 15);
 
-            Scribe_Collections.Look(ref ViewerColorCodes, "ViewerColorCodes", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref ViewerModerators, "ViewerModerators", LookMode.Value, LookMode.Value);
-            Scribe_Collections.Look(ref BannedViewers, "BannedViewers", LookMode.Value);
+            Scribe_Collections.Look(ref viewerColorCodes, "ViewerColorCodes", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref viewerModerators, "ViewerModerators", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref bannedViewers, "BannedViewers", LookMode.Value);
 
             Scribe_Values.Look(ref EnableViewerQueue, "EnableViewerQueue", true);
             Scribe_Values.Look(ref ViewerNamedColonistQueue, "ViewerNamedColonistQueue", true);
@@ -483,15 +507,18 @@ namespace TwitchToolkit
                 incident.settings.ExposeData();
             }
 
-            if (BannedViewers == null || BannedViewers.Count < 1)
+            if (BannedViewers.Count == 0)
             {
-                BannedViewers = new List<string>(PubliclyKnownBots);
+                BannedViewers.AddRange(PubliclyKnownBots);
             }
 
-            if (VoteWeights == null || VoteWeights.Count < 1)
+            if (VoteWeights == null)
             {
-                ToolkitSettings.VoteWeights = new Dictionary<string, int>();
+                VoteWeights = new Dictionary<string, int>();
+            }
 
+            if (VoteWeights.Count == 0)
+            {
                 foreach (VotingIncident vote in DefDatabase<VotingIncident>.AllDefs)
                 {
                     ToolkitSettings.VoteWeights.Add(vote.defName, 100);

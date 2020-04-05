@@ -4,33 +4,26 @@ using System.Collections.Generic;
 using System.Linq;
 using TwitchToolkit.Store;
 using Verse;
+using ToolkitCore.Models;
 
 namespace TwitchToolkit.IncidentHelpers.Diseases
 {
 
     public class RandomDisease : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 3)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[2],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[2], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             worker = new IncidentWorker_DiseaseHuman();
             List<IncidentDef> allDiseases = DefDatabase<IncidentDef>.AllDefs.Where(s => s.workerClass == typeof(IncidentWorker_DiseaseHuman)).ToList();
@@ -39,9 +32,7 @@ namespace TwitchToolkit.IncidentHelpers.Diseases
 
             target = Current.Game.AnyPlayerHomeMap;
             if (target == null)
-            {
                 return false;
-            }
 
             float defaultThreatPoints = StorytellerUtility.DefaultSiteThreatPointsNow();
             parms = StorytellerUtility.DefaultParmsNow(worker.def.category, target);
@@ -59,7 +50,7 @@ namespace TwitchToolkit.IncidentHelpers.Diseases
                 VariablesHelpers.SendPurchaseMessage($"Starting {worker.def.LabelCap} with {pointsWager} points wagered and {(int)parms.points} disease points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} not enough points spent for diseases.");
+            TwitchWrapper.SendChatMessage("Not enough points spent for diseases.");
         }
 
         private int pointsWager = 0;
@@ -68,44 +59,36 @@ namespace TwitchToolkit.IncidentHelpers.Diseases
         private IIncidentTarget target = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class SpecificDisease : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 4)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[3],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[3], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             string diseaseLabel = command[2].ToLower();
 
             worker = new IncidentWorker_DiseaseHuman();
-            List<IncidentDef> allDiseases = DefDatabase<IncidentDef>.AllDefs.Where(s =>
-                    s.category == IncidentCategoryDefOf.DiseaseHuman &&
-                    string.Join("", s.LabelCap.RawText.Split(' ')).ToLower() == diseaseLabel
-                ).ToList();
+            List<IncidentDef> allDiseases = DefDatabase<IncidentDef>.AllDefs
+                .Where(s => s.category == IncidentCategoryDefOf.DiseaseHuman 
+                    && string.Join("", s.LabelCap.RawText.Split(' ')).ToLower() == diseaseLabel)
+                .ToList();
 
             if (allDiseases.Count < 1)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} no disease {diseaseLabel} found.");
+                message.Reply($"No disease {diseaseLabel} found.");
                 return false;
             }
 
@@ -143,7 +126,7 @@ namespace TwitchToolkit.IncidentHelpers.Diseases
         private IIncidentTarget target = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
 }

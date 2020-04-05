@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ToolkitCore;
+using ToolkitCore.Models;
 using TwitchToolkit.IncidentHelpers.IncidentHelper_Settings;
 using TwitchToolkit.Incidents;
 using TwitchToolkit.PawnQueue;
@@ -63,12 +64,12 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
     public class BuyPawn : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
-            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(viewer, this.storeIncident.cost)) return false;
-            if(Current.Game.GetComponent<GameComponentPawns>().HasUserBeenNamed(viewer.username))
+            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(message, viewer, this.storeIncident.cost)) return false;
+            if(Current.Game.GetComponent<GameComponentPawns>().HasUserBeenNamed(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you are already in the colony.");
+                message.Reply($" you are already in the colony.");
                 return false;
             }
 
@@ -110,32 +111,24 @@ namespace TwitchToolkit.IncidentHelpers.Special
         private IncidentParms parms = null;
         private bool separateChannel = false;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class SpawnAnimal : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 4)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($" syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[3],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[3], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             string animalKind = command[2].ToLower();
 
@@ -147,15 +140,13 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (allAnimals.Count < 1)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} no animal {animalKind} found.");
+                message.Reply($" no animal {animalKind} found.");
                 return false;
             }
 
             target = Helper.AnyPlayerMap;
             if (target == null)
-            {
                 return false;
-            }
 
             float points = IncidentHelper_PointsHelper.RollProportionalGamePoints(storeIncident, pointsWager, StorytellerUtility.DefaultThreatPointsNow(target));
             pawnKind = allAnimals[0];
@@ -179,7 +170,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
                 VariablesHelpers.SendPurchaseMessage($"Spawning animal {pawnKind.LabelCap} with {pointsWager} coins wagered and {(int)parms.points} animal points purchased by {Viewer.username}");
                 return;
             }
-            TwitchWrapper.SendChatMessage($"@{Viewer.username} not enough points spent for diseases.");
+            TwitchWrapper.SendChatMessage($"Not enough points spent for diseases.");
         }
 
         private int pointsWager = 0;
@@ -189,40 +180,32 @@ namespace TwitchToolkit.IncidentHelpers.Special
         private bool separateChannel = false;
         private PawnKindDef pawnKind = null;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class LevelPawn : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 4)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($"Syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
             GameComponentPawns gameComponent = Current.Game.GetComponent<GameComponentPawns>();
 
-            if (!gameComponent.HasUserBeenNamed(viewer.username))
+            if (!gameComponent.HasUserBeenNamed(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you must be in the colony to use this command.");
+                message.Reply($"You must be in the colony to use this command.");
                 return false;
             }
 
-            if (!VariablesHelpers.PointsWagerIsValid(
-                    command[3],
-                    viewer,
-                    ref pointsWager,
-                    ref storeIncident,
-                    separateChannel
-                ))
-            {
+            if (!VariablesHelpers.PointsWagerIsValid(command[3], message, viewer, ref pointsWager, ref storeIncident, separateChannel))
                 return false;
-            }
 
             string skillKind = command[2].ToLower();
             List<SkillDef> allSkills = DefDatabase<SkillDef>.AllDefs.Where(s =>
@@ -232,22 +215,22 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (allSkills.Count < 1)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} skill {skillKind} not found.");
+                message.Reply($"Skill {skillKind} not found.");
                 return false;
             }
 
             skill = allSkills[0];
-            pawn = gameComponent.PawnAssignedToUser(viewer.username);
+            pawn = gameComponent.PawnAssignedToUser(message.Viewer.Username);
 
             if (pawn.skills.GetSkill(skill).TotallyDisabled)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} skill {skillKind} disabled on your pawn.");
+                message.Reply($"Skill {skillKind} disabled on your pawn.");
                 return false;
             }
 
             if (pawn.skills.GetSkill(skill).levelInt >= 20)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} skill {skillKind} disabled on your pawn.");
+                message.Reply($"Skill {skillKind} disabled on your pawn.");
                 return false;
             }
 
@@ -291,25 +274,25 @@ namespace TwitchToolkit.IncidentHelpers.Special
         private Pawn pawn = null;
         private SkillDef skill = null;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class ChangeGender : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
 
             GameComponentPawns gameComponent = Current.Game.GetComponent<GameComponentPawns>();
 
-            if (!gameComponent.HasUserBeenNamed(viewer.username))
+            if (!gameComponent.HasUserBeenNamed(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you must be in the colony to use this command.");
+                message.Reply($" you must be in the colony to use this command.");
                 return false;
             }
 
-            pawn = gameComponent.PawnAssignedToUser(viewer.username);
+            pawn = gameComponent.PawnAssignedToUser(message.Viewer.Username);
 
             Helper.Log("changing gneder");
             return true;
@@ -350,7 +333,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
             Current.Game.letterStack.ReceiveLetter("GenderSwap", text, LetterDefOf.PositiveEvent, pawn);
         }
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
 
         private bool separateChannel = false;
         private Pawn pawn = null;
@@ -358,14 +341,14 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
     public class Item : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
             if (command.Length < 4)
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
@@ -373,7 +356,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (itemKey == null || itemKey == "")
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
@@ -390,7 +373,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (item == null || item.price < 1)
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} item not found.");
+                message.Reply($" item not found.");
                 return false;
             }
 
@@ -428,7 +411,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (quantityKey == null || quantityKey == "")
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
@@ -449,11 +432,11 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
             if (quantity < 1 || price < 1)
             {
-                VariablesHelpers.ViewerDidWrongSyntax(viewer.username, storeIncident.syntax);
+                VariablesHelpers.ViewerDidWrongSyntax(message, storeIncident.syntax);
                 return false;
             }
 
-            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(viewer, price)) return false;
+            if (!Purchase_Handler.CheckIfViewerHasEnoughCoins(message, viewer, price)) return false;
 
             if (price < ToolkitSettings.MinimumPurchasePrice)
             {
@@ -551,23 +534,23 @@ namespace TwitchToolkit.IncidentHelpers.Special
         private Store.Item item = null;
         private bool separateChannel;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class BuyPrisoner : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
 
 
             GameComponentPawns gameComponent = Current.Game.GetComponent<GameComponentPawns>();
 
-            if (gameComponent.HasUserBeenNamed(viewer.username))
+            if (gameComponent.HasUserBeenNamed(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you are in colony and cannot be a prisoner.");
+                message.Reply($" you are in colony and cannot be a prisoner.");
                 return false;
             }
 
@@ -594,23 +577,23 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
         private bool separateChannel;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class VisitColony : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
             this.Viewer = viewer;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
 
 
             GameComponentPawns gameComponent = Current.Game.GetComponent<GameComponentPawns>();
 
-            if (gameComponent.HasUserBeenNamed(viewer.username))
+            if (gameComponent.HasUserBeenNamed(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} you are in the colony and cannot visit.");
+                message.Reply($" you are in the colony and cannot visit.");
                 return false;
             }
 
@@ -637,21 +620,21 @@ namespace TwitchToolkit.IncidentHelpers.Special
 
         private bool separateChannel;
 
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public class Inspiration : IncidentHelperVariables
     {
-        public override bool IsPossible(string message, Viewer viewer, bool separateChannel = false)
+        public override bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false)
         {
             this.separateChannel = separateChannel;
-            string[] command = message.Split(' ');
+            string[] command = message.Message.Split(' ');
 
             // check if command has enough variables
             if (command.Length - 2 < storeIncident.variables) // subtract 2 for the first part of the command (!buy item)
             {
                 // let viewer know what correct way is
-                TwitchWrapper.SendChatMessage($"@{viewer.username} syntax is {this.storeIncident.syntax}");
+                message.Reply($" syntax is {this.storeIncident.syntax}");
                 return false;
             }
 
@@ -704,7 +687,7 @@ namespace TwitchToolkit.IncidentHelpers.Special
         }
 
         public bool separateChannel = false;
-        public override Viewer Viewer { get; set; }
+        public override ViewerState Viewer { get; set; }
     }
 
     public static class PawnTracker

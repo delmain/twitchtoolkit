@@ -6,29 +6,44 @@ using Verse;
 using TwitchToolkit.PawnQueue;
 using TwitchToolkit.Windows;
 using TwitchToolkit.Store;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
+using System.Linq;
 
 namespace TwitchToolkit
 {
     public class TwitchToolkit_MainTabWindow : MainTabWindow
     {
-        static TwitchToolkit _mod = Toolkit.Mod;
-        static List<ChatMessage> lastFiveChatMessages = new List<ChatMessage>();
+        private static LinkedList<MessageDetails> lastFiveChatMessages = new LinkedList<MessageDetails>();
 
-        public static void LogChatMessage(ChatMessage message)
+        private static object chatMessagesLock = new object();
+        public static void LogChatMessage(MessageDetails message)
         {
-            if (lastFiveChatMessages.Count >= 5)
+            lock (chatMessagesLock)
             {
-                lastFiveChatMessages = lastFiveChatMessages.FindAll((s) => s != lastFiveChatMessages[0]);
-            }
+                if (lastFiveChatMessages.Count >= 5)
+                {
+                    lastFiveChatMessages.RemoveFirst();
+                }
 
-            lastFiveChatMessages.Add(message);
+                lastFiveChatMessages.AddLast(message);
+            }
+        }
+
+        private IEnumerable<MessageDetails> ChatMessages
+        {
+            get
+            {
+                MessageDetails[] messages;
+                lock(chatMessagesLock)
+                {
+                    messages = lastFiveChatMessages.ToArray();
+                }
+                return messages;
+            }
         }
 
         public TwitchToolkit_MainTabWindow()
-        {
-            _mod = Toolkit.Mod;
-        }
+        { }
 
         public override MainTabWindowAnchor Anchor
         {
@@ -61,14 +76,7 @@ namespace TwitchToolkit
             float btnHeight = 30f;
 
             var rectBtn = new Rect(padding, 0, btnWidth, btnHeight);
-            //if (Widgets.ButtonText(rectBtn, "Chat Window") && !Find.WindowStack.TryRemove(typeof(ChatWindow), true))
-            //{
-            //    ChatWindow chatwnd = new ChatWindow();
-            //    Toolkit.client.activeChatWindow = chatwnd;
-            //    Find.WindowStack.Add(chatwnd);
-            //}
 
-            //rectBtn.x += btnWidth + padding;
             if (Widgets.ButtonText(rectBtn, "Events"))
             {
                 Type type = typeof(StoreIncidentsWindow);
@@ -148,12 +156,7 @@ namespace TwitchToolkit
             Widgets.CheckboxLabeled(rectBtn, "TwitchToolkitEarningCoins".Translate(), ref ToolkitSettings.EarningCoins);
 
             Rect textBox = new Rect(rectBtn.x, rectBtn.y + rectBtn.height + padding, rectBtn.width, rectBtn.height * 10);
-            string outputText = "";
-            foreach (ChatMessage message in lastFiveChatMessages)
-            {
-                outputText += "\n" + message.Username + ": " + message.Message;
-            }
-
+            var outputText = string.Join("\n", ChatMessages.Select(msg => $"<{msg.Viewer.DisplayName}>: {msg.Message}"));
             Widgets.TextArea(textBox, outputText, true);
         }
 

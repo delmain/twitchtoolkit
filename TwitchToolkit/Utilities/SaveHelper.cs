@@ -36,21 +36,25 @@ namespace TwitchToolkit.Utilities
 
         public static void SaveListOfViewersAsJson()
         {
-            List<Utilities.ViewerSaveable> newViewers = new List<ViewerSaveable>();
-            if (Viewers.All == null)
+            var newViewers = new List<ViewerSaveable>();
+            if (ViewerStates.All == null)
                 return;
-            foreach (Viewer vwr in Viewers.All)
+
+            foreach (ViewerState vwr in ViewerStates.All)
             {
-                Utilities.ViewerSaveable nwvwr = new Utilities.ViewerSaveable();
-                nwvwr.id = vwr.id;
-                nwvwr.username = vwr.username;
-                nwvwr.coins = vwr.coins;
-                nwvwr.karma = vwr.GetViewerKarma();
-                newViewers.Add(nwvwr);
+                newViewers.Add(new ViewerSaveable
+                {
+                    id = vwr.id,
+                    username = vwr.username,
+                    coins = vwr.Coins,
+                    karma = vwr.Karma
+                });
             }
 
             if (newViewers.Count <= 0)
                 return;
+
+            // TODO fix all this
             var viewerslisttemplate = JSON.Parse("{\"viewers\":[],\"total\":0}");
             string viewertemplate = "{\"id\":0,\"username\":\"string\",\"karma\":0,\"coins\":0}";
             foreach (ViewerSaveable vwr in newViewers)
@@ -78,20 +82,19 @@ namespace TwitchToolkit.Utilities
 
                 using (StreamReader streamReader = File.OpenText (viewerDataPath))
                 {
-                    string jsonString = streamReader.ReadToEnd ();
+                    string jsonString = streamReader.ReadToEnd();
                     var node = JSON.Parse(jsonString);
                     Helper.Log(node.ToString());
-                    List<Viewer> listOfViewers = new List<Viewer>();
+                    var listOfViewers = new List<ViewerState>();
                     for (int i = 0; i < node["total"]; i++)
                     {
-                        Viewer viewer = new Viewer(node["viewers"][i]["username"]);
+                        var viewer = new ViewerState(node["viewers"][i]["username"]);
                         viewer.SetViewerCoins(node["viewers"][i]["coins"].AsInt);
-
                         viewer.SetViewerKarma(node["viewers"][i]["karma"].AsInt);
                         listOfViewers.Add(viewer);
                     }
 
-                    Viewers.All = listOfViewers;
+                    ViewerStates.All = listOfViewers;
                 }
             }
             catch (InvalidDataException e)

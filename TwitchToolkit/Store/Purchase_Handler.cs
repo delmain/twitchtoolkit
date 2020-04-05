@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using TwitchLib.Client.Models;
+using ToolkitCore.Models;
 using TwitchToolkit.Incidents;
 using Verse;
 
@@ -24,7 +24,7 @@ namespace TwitchToolkit.Store
             viewerNamesDoingVariableCommands = new List<string>();
         }
 
-        public static void ResolvePurchase(Viewer viewer, ChatMessage message, bool separateChannel = false)
+        public static void ResolvePurchase(ViewerState viewer, MessageDetails message, bool separateChannel = false)
         {
             List<string> command = message.Message.Split(' ').ToList();
 
@@ -85,19 +85,24 @@ namespace TwitchToolkit.Store
             return;
         }
 
-        public static void ResolvePurchaseSimple(Viewer viewer, ChatMessage message, StoreIncidentSimple incident, string formattedMessage, bool separateChannel = false)
+        public static void ResolvePurchaseSimple(ViewerState viewer, MessageDetails message, StoreIncidentSimple incident, string formattedMessage, bool separateChannel = false)
         {
             int cost = incident.cost;
 
-            if (cost < 1) return;
+            if (cost < 1) 
+                return;
 
-            if (CheckIfViewerIsInVariableCommandList(viewer.username)) return;
+            if (CheckIfViewerIsInVariableCommandList(message)) 
+                return;
 
-            if (!CheckIfViewerHasEnoughCoins(viewer, cost)) return;
+            if (!CheckIfViewerHasEnoughCoins(message, viewer, cost)) 
+                return;
 
-            if (CheckIfKarmaTypeIsMaxed(incident, viewer.username)) return;
+            if (CheckIfKarmaTypeIsMaxed(incident, message)) 
+                return;
 
-            if (CheckIfIncidentIsOnCooldown(incident, viewer.username)) return;
+            if (CheckIfIncidentIsOnCooldown(incident, message)) 
+                return;
 
             IncidentHelper helper = StoreIncidentMaker.MakeIncident(incident);
             
@@ -109,7 +114,7 @@ namespace TwitchToolkit.Store
 
             if (!helper.IsPossible())
             {
-                TwitchWrapper.SendChatMessage($"@{viewer.username} " + "TwitchToolkitEventNotPossible".Translate());
+                message.Reply("TwitchToolkitEventNotPossible".Translate());
                 return;
             }
 
@@ -139,26 +144,32 @@ namespace TwitchToolkit.Store
             }
         }
 
-        public static void ResolvePurchaseVariables(Viewer viewer, ChatMessage message, StoreIncidentVariables incident, string formattedMessage, bool separateChannel = false)
+        public static void ResolvePurchaseVariables(ViewerState viewer, MessageDetails message, StoreIncidentVariables incident, string formattedMessage, bool separateChannel = false)
         {
             int cost = incident.cost;
 
-            if (cost < 1 && incident.defName != "Item") return;
+            if (cost < 1 && incident.defName != "Item") 
+                return;
 
-            if (CheckIfViewerIsInVariableCommandList(viewer.username)) return;
+            if (CheckIfViewerIsInVariableCommandList(message)) 
+                return;
 
-            if (!CheckIfViewerHasEnoughCoins(viewer, cost)) return;
+            if (!CheckIfViewerHasEnoughCoins(message, viewer, cost)) 
+                return;
 
             if (incident != DefDatabase<StoreIncidentVariables>.GetNamed("Item"))
             {
-                if (CheckIfKarmaTypeIsMaxed(incident, viewer.username)) return;
+                if (CheckIfKarmaTypeIsMaxed(incident, message)) 
+                    return;
             }
             else
             {
-                if (CheckIfCarePackageIsOnCooldown(viewer.username)) return;
+                if (CheckIfCarePackageIsOnCooldown(message)) 
+                    return;
             }
 
-            if (CheckIfIncidentIsOnCooldown(incident, viewer.username)) return;
+            if (CheckIfIncidentIsOnCooldown(incident, message)) 
+                return;
 
             viewerNamesDoingVariableCommands.Add(viewer.username);
 
@@ -170,10 +181,10 @@ namespace TwitchToolkit.Store
                 return;
             }
 
-            if (!helper.IsPossible(formattedMessage, viewer))
+            if (!helper.IsPossible(message, viewer))
             {
-                if (viewerNamesDoingVariableCommands.Contains(viewer.username))
-                    viewerNamesDoingVariableCommands.Remove(viewer.username);
+                if (viewerNamesDoingVariableCommands.Contains(message.Viewer.Username))
+                    viewerNamesDoingVariableCommands.Remove(message.Viewer.Username);
                 return;
             }
 
@@ -187,43 +198,42 @@ namespace TwitchToolkit.Store
             component.LogIncident(incident);
         }
 
-        public static bool CheckIfViewerIsInVariableCommandList(string username, bool separateChannel = false)
+        public static bool CheckIfViewerIsInVariableCommandList(MessageDetails message, bool separateChannel = false)
         {
-            if (viewerNamesDoingVariableCommands.Contains(username))
+            if (viewerNamesDoingVariableCommands.Contains(message.Viewer.Username))
             {
-                TwitchWrapper.SendChatMessage($"@{username} you must wait for the game to unpause to buy something else.");
+                message.Reply("You must wait for the game to unpause to buy something else.");
                 return true;
             }
             return false;
         }
 
-        public static bool CheckIfViewerHasEnoughCoins(Viewer viewer, int finalPrice, bool separateChannel = false)
+        public static bool CheckIfViewerHasEnoughCoins(MessageDetails message, ViewerState viewer, int finalPrice, bool separateChannel = false)
         {
-            if (!ToolkitSettings.UnlimitedCoins && viewer.GetViewerCoins() < finalPrice)
+            if (!ToolkitSettings.UnlimitedCoins && viewer.Coins < finalPrice)
             {
-                TwitchWrapper.SendChatMessage(
-                    Helper.ReplacePlaceholder(
-                        "TwitchToolkitNotEnoughCoins".Translate(),
-                        viewer: viewer.username,
-                        amount: finalPrice.ToString(),
-                        first: viewer.GetViewerCoins().ToString()
-                    ));
+                message.Reply(Helper.ReplacePlaceholder(
+                    "TwitchToolkitNotEnoughCoins".Translate(),
+                    viewer: message.Viewer.DisplayName,
+                    amount: finalPrice.ToString(),
+                    first: viewer.Coins.ToString()
+                ));
                 return false;
             }
             return true;
         }
 
-        public static bool CheckIfKarmaTypeIsMaxed(StoreIncident incident, string username, bool separateChannel = false)
+        public static bool CheckIfKarmaTypeIsMaxed(StoreIncident incident, MessageDetails message, bool separateChannel = false)
         {
-                bool maxed = CheckTimesKarmaTypeHasBeenUsedRecently(incident);        
+            bool maxed = CheckTimesKarmaTypeHasBeenUsedRecently(incident);        
 
-                if (maxed)
-                {
-                    Store_Component component = Current.Game.GetComponent<Store_Component>();
-                    TwitchWrapper.SendChatMessage($"@{username} {incident.label.CapitalizeFirst()} is maxed from karmatype, wait " + component.DaysTillIncidentIsPurchaseable(incident) + " days to purchase.");
-                }
+            if (maxed)
+            {
+                Store_Component component = Current.Game.GetComponent<Store_Component>();
+                message.Reply($"{incident.label.CapitalizeFirst()} is maxed from karmatype, wait " + component.DaysTillIncidentIsPurchaseable(incident) + " days to purchase.");
+            }
 
-                return maxed;
+            return maxed;
         }
 
         public static bool CheckTimesKarmaTypeHasBeenUsedRecently(StoreIncident incident)
@@ -251,7 +261,7 @@ namespace TwitchToolkit.Store
             return false;
         }
 
-        public static bool CheckIfCarePackageIsOnCooldown(string username, bool separateChannel = false)
+        public static bool CheckIfCarePackageIsOnCooldown(MessageDetails message, bool separateChannel = false)
         {
             if (!ToolkitSettings.MaxEvents)
             {
@@ -264,14 +274,14 @@ namespace TwitchToolkit.Store
             if (component.IncidentsInLogOf(incident.abbreviation) >= ToolkitSettings.MaxCarePackagesPerInterval)
             {
                 float daysTill = component.DaysTillIncidentIsPurchaseable(incident);
-                TwitchWrapper.SendChatMessage($"@{username} care packages are on cooldown, wait " + daysTill + $" day{(daysTill != 1 ? "s" : "")}.");
+                message.Reply($"Care packages are on cooldown, wait {daysTill} day{(daysTill != 1 ? "s" : "")}.");
                 return true;
             }
 
             return false;
         }
 
-        public static bool CheckIfIncidentIsOnCooldown(StoreIncident incident, string username, bool separateChannel = false)
+        public static bool CheckIfIncidentIsOnCooldown(StoreIncident incident, MessageDetails message, bool separateChannel = false)
         {
             if (!ToolkitSettings.EventsHaveCooldowns)
             {
@@ -285,15 +295,15 @@ namespace TwitchToolkit.Store
             if (maxed)
             {
                 float days = component.DaysTillIncidentIsPurchaseable(incident);
-                TwitchWrapper.SendChatMessage($"@{username} {incident.label.CapitalizeFirst()} is maxed, wait " + days + $" day{(days != 1 ? "s" : "")} to purchase.");
+                message.Reply($"{incident.label.CapitalizeFirst()} is maxed, wait {days} day{(days == 1 ? "" : "s")} to purchase.");
             }
 
             return maxed;
         }
 
-        public static void QueuePlayerMessage(Viewer viewer, string message, int variables = 0)
+        public static void QueuePlayerMessage(ViewerState viewer, string message, int variables = 0)
         {
-            string colorCode = Viewer.GetViewerColorCode(viewer.username);
+            string colorCode = ViewerState.GetViewerColorCode(viewer.username);
             string userNameTag = $"<color=#{colorCode}>{viewer.username}</color>";
             string[] command = message.Split(' ');
             string output = "\n\n";
@@ -308,7 +318,7 @@ namespace TwitchToolkit.Store
 
                 for (int i = 2 + variables; i < command.Length; i++)
                 {
-                    if (viewer.username.ToLower() == "hodlhodl")
+                    if (viewer.IsBroadcaster)
                     {
                         output += " " + AdminText(command[i]);
                     }
@@ -320,7 +330,7 @@ namespace TwitchToolkit.Store
                     {
                         output += " " + VIPText(command[i]);
                     }
-                    else if (viewer.mod)
+                    else if (viewer.IsModerator)
                     {
                         output += " " + ModText(command[i]);
                     }

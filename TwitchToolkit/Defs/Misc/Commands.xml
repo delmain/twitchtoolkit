@@ -92,7 +92,7 @@
   <TwitchToolkit.Command>
     <defName>GiftCoins</defName>
     <label>gift coins</label>
-    <enabled>false</enabled>
+    <enabled>true</enabled>
     <command>giftcoins</command>
     <shouldBeInSeparateRoom>true</shouldBeInSeparateRoom>
     <commandDriver>TwitchToolkit.Commands.ViewerCommands.GiftCoins</commandDriver>

@@ -3,6 +3,7 @@ using ToolkitCore;
 using System;
 using System.Collections.Generic;
 using Verse;
+using System.Linq;
 
 namespace TwitchToolkit.Votes
 {
@@ -43,17 +44,14 @@ namespace TwitchToolkit.Votes
                 TwitchWrapper.SendChatMessage("Which exotic item should the colony receive?");
                 foreach (KeyValuePair<int, List<Thing>> pair in thingsOptions)
                 {
-                    TwitchWrapper.SendChatMessage($"[{pair.Key + 1}]  {VoteKeyLabel(pair.Key)}");
+                    TwitchWrapper.SendChatMessage($"[{pair.Key + 1}]  {string.Join(", ", pair.Value.Select(t => t.LabelCap))}");
                 }
             }
         }
 
         public override string VoteKeyLabel(int id)
         {
-            string msg = thingsOptions[id][0].LabelCap;
-            for (int i = 1; i < thingsOptions[id].Count; i++)
-                msg += ", " + thingsOptions[id][i].LabelCap;
-            return msg;
+            return string.Join(", ", thingsOptions[id].Select(t => t.LabelCap));
         }
 
         Dictionary<int, List<Thing>> thingsOptions = null;

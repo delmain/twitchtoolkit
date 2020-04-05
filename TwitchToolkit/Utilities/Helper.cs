@@ -5,6 +5,7 @@ using UnityEngine;
 using RimWorld;
 using Verse;
 using System.Text;
+using System.Diagnostics;
 
 namespace TwitchToolkit
 {
@@ -34,25 +35,25 @@ namespace TwitchToolkit
           string second = null,
           string third = null)
         {
-        quote = quote.Replace("{colonist}", colonist ?? "");
-        quote = quote.Replace("{colonists}", colonists ?? "");
-        quote = quote.Replace("{gender}", gender ?? "");
-        quote = quote.Replace("{stat}", stat ?? "");
-        quote = quote.Replace("{skill}", skill ?? "");
-        quote = quote.Replace("{material}", material ?? "");
-        quote = quote.Replace("{item}", item ?? "");
-        quote = quote.Replace("{animal}", animal ?? "");
-        quote = quote.Replace("{from}", from ?? "");
-        quote = quote.Replace("{to}", to ?? "");
-        quote = quote.Replace("{amount}", amount ?? "");
-        quote = quote.Replace("{mod}", mod ?? "");
-        quote = quote.Replace("{viewer}", viewer ?? "");
-        quote = quote.Replace("{newbalance}", newbalance ?? "");
-        quote = quote.Replace("{karma}", karma ?? "");
-        quote = quote.Replace("{first}", first ?? "");
-        quote = quote.Replace("{second}", second ?? "");
-        quote = quote.Replace("{third}", third ?? "");
-        return quote;
+            quote = quote.Replace("{colonist}", colonist ?? "");
+            quote = quote.Replace("{colonists}", colonists ?? "");
+            quote = quote.Replace("{gender}", gender ?? "");
+            quote = quote.Replace("{stat}", stat ?? "");
+            quote = quote.Replace("{skill}", skill ?? "");
+            quote = quote.Replace("{material}", material ?? "");
+            quote = quote.Replace("{item}", item ?? "");
+            quote = quote.Replace("{animal}", animal ?? "");
+            quote = quote.Replace("{from}", from ?? "");
+            quote = quote.Replace("{to}", to ?? "");
+            quote = quote.Replace("{amount}", amount ?? "");
+            quote = quote.Replace("{mod}", mod ?? "");
+            quote = quote.Replace("{viewer}", viewer ?? "");
+            quote = quote.Replace("{newbalance}", newbalance ?? "");
+            quote = quote.Replace("{karma}", karma ?? "");
+            quote = quote.Replace("{first}", first ?? "");
+            quote = quote.Replace("{second}", second ?? "");
+            quote = quote.Replace("{third}", third ?? "");
+            return quote;
         }
 
         public static Map AnyPlayerMap
@@ -75,15 +76,15 @@ namespace TwitchToolkit
         {
             get
             {
-            return
-              Helper.AnyPlayerMap != null &&
-              Current.Game.storyteller != null &&
-              Current.Game.storyteller.def != null &&
-              Current.Game.storyteller.def.defName != null;
+                return
+                  Helper.AnyPlayerMap != null &&
+                  Current.Game.storyteller != null &&
+                  Current.Game.storyteller.def != null &&
+                  Current.Game.storyteller.def.defName != null;
             }
         }
 
-        private static string[] defaultColors = { "FF0000", "0000FF", "008000", "008000", "FF7F50", "9ACD32", "FF4500", "2E8B57", "DAA520", "D2691E", "5F9EA0", "1E90FF", "FF69B4", "8A2BE2", "8A2BE2"};
+        private static string[] defaultColors = { "FF0000", "0000FF", "008000", "008000", "FF7F50", "9ACD32", "FF4500", "2E8B57", "DAA520", "D2691E", "5F9EA0", "1E90FF", "FF69B4", "8A2BE2", "8A2BE2" };
 
         public static string GetRandomColorCode()
         {
@@ -93,6 +94,12 @@ namespace TwitchToolkit
         public static void Log(string message)
         {
             Verse.Log.Message("<color=#6441A4>[Toolkit]</color> " + message);
+        }
+
+        [Conditional("DEBUG")]
+        public static void DebugLog(string message)
+        {
+            Verse.Log.Message($"<color=#8C50FA>[ToolkitDebug]</color> {message}");
         }
 
         public static void LogPaste(string message)
@@ -159,7 +166,7 @@ namespace TwitchToolkit
 
             Current.Game.letterStack.ReceiveLetter("TwitchToolkitCarePackage".Translate(), message, type, new TargetInfo(vec, Helper.AnyPlayerMap, false));
         }
-       
+
         static IEnumerable<Pawn> GetColonists(float percentColony)
         {
             var pawns = new List<Pawn>();
@@ -329,7 +336,7 @@ namespace TwitchToolkit
         //}
 
         public static bool AnimalTamePossible()
-        {           
+        {
             var incident = new RimWorld.IncidentWorker_SelfTame();
             incident.def.tale = null;
             incident.def.category = new IncidentCategoryDef();
@@ -541,7 +548,7 @@ namespace TwitchToolkit
         {
             string lang = Prefs.LangFolderName.ToLower();
             Encoding encoding;
-            switch(lang)
+            switch (lang)
             {
                 case "deutsch":
                     encoding = System.Text.Encoding.GetEncoding(850);

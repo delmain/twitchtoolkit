@@ -5,6 +5,7 @@ using Verse;
 
 namespace TwitchToolkit.Votes
 {
+    // TODO Stop this from using ViewerState.id
     public abstract class Vote
     {
         public List<int> optionsKeys = null;
@@ -26,9 +27,14 @@ namespace TwitchToolkit.Votes
 
         public void RecordVote(int userId, int voteKey)
         {
-            if (!VoteKeyExists(voteKey)) return;
-            if (viewerVotes.ContainsKey(userId)) viewerVotes[userId] = voteKey;
-            else viewerVotes.Add(userId, voteKey);
+            if (!VoteKeyExists(voteKey)) 
+                return;
+
+            if (viewerVotes.ContainsKey(userId)) 
+                viewerVotes[userId] = voteKey;
+            else 
+                viewerVotes.Add(userId, voteKey);
+
             CountVotes();
         }
 
@@ -39,10 +45,12 @@ namespace TwitchToolkit.Votes
 
         public void CountVotes()
         {
-            foreach (int key in optionsKeys) voteCounts[key] = 0;
+            foreach (int key in optionsKeys) 
+                voteCounts[key] = 0;
+
             foreach (KeyValuePair<int, int> viewerVote in viewerVotes)
             {
-                Viewer viewerById = Viewers.GetViewerById(viewerVote.Key);
+                var viewerById = ViewerStates.GetViewerById(viewerVote.Key);
 
                 int voteCount = 1;
 
@@ -54,7 +62,7 @@ namespace TwitchToolkit.Votes
                 {
                     voteCount += ToolkitSettings.VIPExtraVotes;
                 }
-                else if (viewerById.mod)
+                else if (viewerById.IsModerator)
                 {
                     voteCount += ToolkitSettings.ModExtraVotes;
                 }

@@ -1,4 +1,5 @@
-﻿using TwitchToolkit.Incidents;
+﻿using ToolkitCore.Models;
+using TwitchToolkit.Incidents;
 
 namespace TwitchToolkit.Store
 {
@@ -7,16 +8,16 @@ namespace TwitchToolkit.Store
         public abstract bool IsPossible();
         public abstract void TryExecute();
         public StoreIncident storeIncident = null;
-        public Viewer Viewer { get; set; } = null;
+        public ViewerState Viewer { get; set; } = null;
         public string message;
     }
 
     public abstract class IncidentHelperVariables
     {
-        public abstract bool IsPossible(string message, Viewer viewer, bool separateChannel = false);
+        public abstract bool IsPossible(MessageDetails message, ViewerState viewer, bool separateChannel = false);
         public abstract void TryExecute();
         public StoreIncidentVariables storeIncident = null;
-        public abstract Viewer Viewer { get; set; }
+        public abstract ViewerState Viewer { get; set; }
         public string message;
     }
 }
